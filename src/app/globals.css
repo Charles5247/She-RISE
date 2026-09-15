@@ -1,0 +1,187 @@
+@import "tailwindcss";
+
+/* =========================================================================
+   SheRISE Design Tokens — Bold & Empowering
+   Locked values from design-tokens.json. Do not substitute defaults.
+   ========================================================================= */
+
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: local('Bricolage Grotesque');
+}
+
+:root {
+  /* Brand */
+  --c-plum: #2A0E2E;
+  --c-plum-mid: #4A1F52;
+  --c-magenta: #D4306E;
+  --c-magenta-deep: #9E1E52;
+  --c-gold: #E8B84A;
+  --c-gold-deep: #B08820;
+
+  /* Surfaces */
+  --c-off: #F9F5EE;
+  --c-cream: #F5EFE6;
+  --c-cream-deep: #E8DDCB;
+  --c-ink: #1A0A1E;
+  --c-ink-soft: #4A3A44;
+  --c-line: #DED3C0;
+  --c-line-soft: rgba(232, 184, 74, 0.10);
+
+  /* Dark-surface tokens */
+  --c-dark-text: #F5EFE6;
+  --c-dark-text-soft: rgba(245, 239, 230, 0.65);
+  --c-dark-border: rgba(232, 184, 74, 0.15);
+  --c-dark-card-bg: rgba(245, 239, 230, 0.04);
+
+  /* Semantic */
+  --c-success: #5F7A5A;
+  --c-warning: #E8B84A;
+  --c-danger: #B4463B;
+
+  /* Social brand */
+  --c-facebook: #1877F2;
+  --c-linkedin: #0A66C2;
+
+  /* Fonts — wired to next/font variables set on <html> in layout.tsx */
+  --font-display: var(--font-display-family), 'Bricolage Grotesque', sans-serif;
+  --font-body: var(--font-body-family), 'Inter', system-ui, sans-serif;
+  --font-mono: var(--font-mono-family), 'IBM Plex Mono', monospace;
+
+  /* Radius */
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 8px;
+  --r-xl: 10px;
+  --r-xxl: 12px;
+  --r-pill: 999px;
+
+  /* Shadows */
+  --shadow-card-magenta: 0 12px 30px -12px rgba(212, 48, 110, 0.4);
+  --shadow-card-gold: 0 12px 30px -12px rgba(232, 184, 74, 0.4);
+  --shadow-modal: 0 40px 80px -30px rgba(0, 0, 0, 0.5);
+
+  /* Motion */
+  --ease-swift: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@theme inline {
+  --color-plum: var(--c-plum);
+  --color-plum-mid: var(--c-plum-mid);
+  --color-magenta: var(--c-magenta);
+  --color-magenta-deep: var(--c-magenta-deep);
+  --color-gold: var(--c-gold);
+  --color-gold-deep: var(--c-gold-deep);
+  --color-off: var(--c-off);
+  --color-cream: var(--c-cream);
+  --color-cream-deep: var(--c-cream-deep);
+  --color-ink: var(--c-ink);
+  --color-ink-soft: var(--c-ink-soft);
+  --color-line: var(--c-line);
+  --color-success: var(--c-success);
+  --color-warning: var(--c-warning);
+  --color-danger: var(--c-danger);
+  --color-facebook: var(--c-facebook);
+  --color-linkedin: var(--c-linkedin);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
+  --radius-xxl: var(--r-xxl);
+  --radius-pill: var(--r-pill);
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background: var(--c-off);
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Focus ring per Section 11 — 2px gold, 2px offset */
+:focus-visible {
+  outline: 2px solid var(--c-gold);
+  outline-offset: 2px;
+}
+
+/* Photo placeholder pattern */
+.sr-photo-ph {
+  position: relative;
+  width: 100%;
+  background-color: var(--ph-tone, var(--c-cream-deep));
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(0,0,0,0.06) 0px,
+    rgba(0,0,0,0.06) 2px,
+    transparent 2px,
+    transparent 10px
+  );
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+.sr-photo-ph > div {
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+}
+.sr-photo-ph.dark {
+  color: rgba(255,255,255,0.7);
+}
+
+/* Scrollbar hiding for horizontal chip/story rows */
+.sr-scroll-x {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.sr-scroll-x::-webkit-scrollbar {
+  display: none;
+}
+
+/* Streak flame pulse */
+@keyframes sr-pulse {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+.sr-flame-pulse {
+  animation: sr-pulse 2s ease-in-out infinite;
+}
+
+/* Route transition */
+.sr-route-fade {
+  animation: sr-fade-in 160ms var(--ease-swift);
+}
+@keyframes sr-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mono uppercase label utility */
+.sr-label {
+  font-family: var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Line-clamp helper */
+.sr-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

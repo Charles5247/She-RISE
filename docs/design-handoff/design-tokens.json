@@ -1,0 +1,118 @@
+{
+  "$schema": "https://tokens.studio/dtcg",
+  "meta": {
+    "name": "SheRISE · Bold & Empowering",
+    "version": "1.0.0",
+    "date": "2026-09-12"
+  },
+  "color": {
+    "brand": {
+      "plum":         { "value": "#2A0E2E", "type": "color", "description": "Primary dark surface — admin canvas, hero cards" },
+      "plumMid":      { "value": "#4A1F52", "type": "color", "description": "Plum secondary — gradient partner" },
+      "magenta":      { "value": "#D4306E", "type": "color", "description": "Primary interactive — CTAs, streaks" },
+      "magentaDeep":  { "value": "#9E1E52", "type": "color", "description": "Pressed magenta, photo overlays" },
+      "gold":         { "value": "#E8B84A", "type": "color", "description": "Accent — milestones, trainer verified" },
+      "goldDeep":     { "value": "#B08820", "type": "color", "description": "Pressed / deep gold" }
+    },
+    "surface": {
+      "off":          { "value": "#F9F5EE", "type": "color", "description": "Mobile screen background" },
+      "cream":        { "value": "#F5EFE6", "type": "color", "description": "Card fill" },
+      "creamDeep":    { "value": "#E8DDCB", "type": "color", "description": "Warm border, chip fill" }
+    },
+    "text": {
+      "ink":          { "value": "#1A0A1E", "type": "color" },
+      "inkSoft":      { "value": "#4A3A44", "type": "color" },
+      "onDark":       { "value": "#F5EFE6", "type": "color" },
+      "onDarkSoft":   { "value": "rgba(245,239,230,0.65)", "type": "color" }
+    },
+    "line": {
+      "onLight":      { "value": "#DED3C0", "type": "color" },
+      "onDark":       { "value": "rgba(232,184,74,0.15)", "type": "color" }
+    },
+    "semantic": {
+      "success":      { "value": "#5F7A5A", "type": "color" },
+      "warning":      { "value": "#E8B84A", "type": "color" },
+      "danger":       { "value": "#B4463B", "type": "color" }
+    },
+    "socialBrand": {
+      "facebook":     { "value": "#1877F2", "type": "color" },
+      "linkedin":     { "value": "#0A66C2", "type": "color" }
+    }
+  },
+  "font": {
+    "family": {
+      "display":      { "value": "Bricolage Grotesque, sans-serif", "type": "fontFamily" },
+      "body":         { "value": "Inter, system-ui, sans-serif", "type": "fontFamily" },
+      "mono":         { "value": "IBM Plex Mono, monospace", "type": "fontFamily" }
+    },
+    "weight": {
+      "regular":      { "value": 400, "type": "fontWeight" },
+      "medium":       { "value": 500, "type": "fontWeight" },
+      "semibold":     { "value": 600, "type": "fontWeight" },
+      "bold":         { "value": 700, "type": "fontWeight" },
+      "black":        { "value": 800, "type": "fontWeight" }
+    },
+    "size": {
+      "micro":        { "value": "9px",   "type": "dimension" },
+      "caption":      { "value": "11px",  "type": "dimension" },
+      "body":         { "value": "14px",  "type": "dimension" },
+      "bodyLg":       { "value": "16px",  "type": "dimension" },
+      "sectionTitle": { "value": "22px",  "type": "dimension" },
+      "cardTitle":    { "value": "30px",  "type": "dimension" },
+      "pageTitle":    { "value": "44px",  "type": "dimension" },
+      "heroXl":       { "value": "88px",  "type": "dimension" },
+      "heroXxl":      { "value": "160px", "type": "dimension" }
+    },
+    "letterSpacing": {
+      "displayTight": { "value": "-0.035em", "type": "dimension" },
+      "display":      { "value": "-0.02em",  "type": "dimension" },
+      "body":         { "value": "0em",       "type": "dimension" },
+      "monoLabel":    { "value": "0.14em",    "type": "dimension" },
+      "monoWide":     { "value": "0.16em",    "type": "dimension" },
+      "button":       { "value": "0.06em",    "type": "dimension" }
+    }
+  },
+  "space": {
+    "0.5":  { "value": "4px",  "type": "dimension" },
+    "1":    { "value": "8px",  "type": "dimension" },
+    "1.25": { "value": "10px", "type": "dimension" },
+    "1.5":  { "value": "12px", "type": "dimension" },
+    "2":    { "value": "16px", "type": "dimension" },
+    "2.5":  { "value": "20px", "type": "dimension" },
+    "3":    { "value": "24px", "type": "dimension" },
+    "4":    { "value": "32px", "type": "dimension" },
+    "5":    { "value": "40px", "type": "dimension" },
+    "6":    { "value": "48px", "type": "dimension" },
+    "7.5":  { "value": "60px", "type": "dimension" },
+    "9":    { "value": "72px", "type": "dimension" },
+    "10":   { "value": "80px", "type": "dimension" }
+  },
+  "radius": {
+    "sm":     { "value": "4px",   "type": "dimension", "description": "Inputs, filter chips, badges" },
+    "md":     { "value": "6px",   "type": "dimension", "description": "Cards, tables" },
+    "lg":     { "value": "8px",   "type": "dimension", "description": "Buttons, hero cards, dialogs" },
+    "xl":     { "value": "10px",  "type": "dimension", "description": "Pathway hero, elevated cards" },
+    "xxl":    { "value": "12px",  "type": "dimension", "description": "Image thumbnails" },
+    "pill":   { "value": "999px", "type": "dimension" }
+  },
+  "shadow": {
+    "cardHoverMagenta": { "value": "0 12px 30px -12px rgba(212,48,110,0.4)",  "type": "boxShadow" },
+    "cardHoverGold":    { "value": "0 12px 30px -12px rgba(232,184,74,0.4)",  "type": "boxShadow" },
+    "modal":            { "value": "0 40px 80px -30px rgba(0,0,0,0.5)",       "type": "boxShadow" }
+  },
+  "motion": {
+    "duration": {
+      "fast":    { "value": "160ms", "type": "duration" },
+      "medium":  { "value": "300ms", "type": "duration" },
+      "slow":    { "value": "600ms", "type": "duration" }
+    },
+    "easing": {
+      "swift":   { "value": "cubic-bezier(0.22, 1, 0.36, 1)", "type": "cubicBezier" }
+    }
+  },
+  "breakpoint": {
+    "mobile":  { "value": "390px",  "type": "dimension", "description": "Participant app baseline" },
+    "desktop": { "value": "1440px", "type": "dimension", "description": "Admin dashboard baseline" },
+    "adminCollapse": { "value": "1180px", "type": "dimension", "description": "Below this, admin 2-col becomes stacked" }
+  }
+}

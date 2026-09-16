@@ -11,23 +11,23 @@ export async function POST(req: NextRequest) {
   }
 
   const db = getDb();
-  const otp = db
+  const otp = (await db
     .prepare(
-      `SELECT * FROM otp_codes WHERE destination = ? AND code = ? AND consumed = 0 AND expires_at > datetime('now')
+      `SELECT * FROM otp_codes WHERE destination = ? AND code = ? AND consumed = 0 AND expires_at > NOW()
        ORDER BY created_at DESC LIMIT 1`
     )
-    .get(identifier, code) as { id: string } | undefined;
+    .get(identifier, code)) as { id: string } | undefined;
 
   if (!otp) {
     return Response.json({ code: "INVALID_OTP", message: "That code is incorrect or has expired." }, { status: 400 });
   }
 
-  db.prepare(`UPDATE otp_codes SET consumed = 1 WHERE id = ?`).run(otp.id);
+  await db.prepare(`UPDATE otp_codes SET consumed = 1 WHERE id = ?`).run(otp.id);
 
   const isEmail = identifier.includes("@");
-  const user = db
+  const user = (await db
     .prepare(`SELECT id, onboarding_complete FROM users WHERE ${isEmail ? "email" : "phone"} = ?`)
-    .get(identifier) as { id: string; onboarding_complete: number } | undefined;
+    .get(identifier)) as { id: string; onboarding_complete: number } | undefined;
 
   if (!user) {
     return Response.json({ code: "NOT_FOUND", message: "Account not found." }, { status: 404 });

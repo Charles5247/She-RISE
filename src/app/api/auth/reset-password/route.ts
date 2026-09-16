@@ -12,16 +12,16 @@ export async function POST(req: NextRequest) {
     return Response.json({ code: "BAD_REQUEST", message: "Missing fields." }, { status: 400 });
   }
   const db = getDb();
-  const otp = db
+  const otp = (await db
     .prepare(
-      `SELECT id FROM otp_codes WHERE destination = ? AND code = ? AND purpose = 'reset' AND consumed = 0 AND expires_at > datetime('now')`
+      `SELECT id FROM otp_codes WHERE destination = ? AND code = ? AND purpose = 'reset' AND consumed = 0 AND expires_at > NOW()`
     )
-    .get(identifier, code) as { id: string } | undefined;
+    .get(identifier, code)) as { id: string } | undefined;
   if (!otp) return Response.json({ code: "INVALID_OTP", message: "Code is incorrect or expired." }, { status: 400 });
 
-  db.prepare(`UPDATE otp_codes SET consumed = 1 WHERE id = ?`).run(otp.id);
+  await db.prepare(`UPDATE otp_codes SET consumed = 1 WHERE id = ?`).run(otp.id);
   const isEmail = identifier.includes("@");
-  db.prepare(`UPDATE users SET password_hash = ? WHERE ${isEmail ? "email" : "phone"} = ?`).run(
+  await db.prepare(`UPDATE users SET password_hash = ? WHERE ${isEmail ? "email" : "phone"} = ?`).run(
     hashPassword(newPassword),
     identifier
   );

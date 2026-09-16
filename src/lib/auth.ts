@@ -44,7 +44,7 @@ export async function createSession(userId: string) {
   const token = crypto.randomBytes(32).toString("hex");
   const id = newId("sess");
   const expires = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
-  db.prepare(
+  await db.prepare(
     `INSERT INTO sessions (id, user_id, token_hash, expires_at) VALUES (?, ?, ?, ?)`
   ).run(id, userId, hashToken(token), expires.toISOString());
 
@@ -64,7 +64,7 @@ export async function destroySession() {
   const token = store.get(SESSION_COOKIE)?.value;
   if (token) {
     const db = getDb();
-    db.prepare(`DELETE FROM sessions WHERE token_hash = ?`).run(hashToken(token));
+    await db.prepare(`DELETE FROM sessions WHERE token_hash = ?`).run(hashToken(token));
   }
   store.delete(SESSION_COOKIE);
 }
@@ -76,17 +76,17 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;
   const db = getDb();
-  const session = db
-    .prepare(`SELECT * FROM sessions WHERE token_hash = ? AND expires_at > datetime('now')`)
-    .get(hashToken(token)) as { user_id: string } | undefined;
+  const session = (await db
+    .prepare(`SELECT * FROM sessions WHERE token_hash = ? AND expires_at > NOW()`)
+    .get(hashToken(token))) as { user_id: string } | undefined;
   if (!session) return null;
-  const user = db
+  const user = (await db
     .prepare(
       `SELECT id, role, first_name, last_name, phone, email, language, lga, avatar_url,
               is_verified_trainer, panic_hide_enabled, onboarding_complete
        FROM users WHERE id = ?`
     )
-    .get(session.user_id) as SessionUser | undefined;
+    .get(session.user_id)) as SessionUser | undefined;
   return user ?? null;
 }
 

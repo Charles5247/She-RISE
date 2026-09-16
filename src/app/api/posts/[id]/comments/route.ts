@@ -13,14 +13,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
 
   const db = getDb();
-  const post = db.prepare(`SELECT author_id FROM posts WHERE id = ?`).get(id) as { author_id: string } | undefined;
+  const post = (await db.prepare(`SELECT author_id FROM posts WHERE id = ?`).get(id)) as { author_id: string } | undefined;
   if (!post) return Response.json({ code: "NOT_FOUND", message: "Post not found." }, { status: 404 });
 
   const commentId = newId("cm");
-  db.prepare(`INSERT INTO comments (id, post_id, author_id, body) VALUES (?, ?, ?, ?)`).run(commentId, id, user.id, body.trim());
+  await db.prepare(`INSERT INTO comments (id, post_id, author_id, body) VALUES (?, ?, ?, ?)`).run(commentId, id, user.id, body.trim());
 
   if (post.author_id !== user.id) {
-    db.prepare(
+    await db.prepare(
       `INSERT INTO notifications (id, user_id, kind, actor_id, post_id, body) VALUES (?, ?, 'comment', ?, ?, ?)`
     ).run(newId("ntf"), post.author_id, user.id, id, `${user.first_name} commented on your post`);
   }

@@ -15,9 +15,9 @@ export async function POST(req: NextRequest) {
 
   const isEmail = identifier.includes("@");
   const db = getDb();
-  const user = db
+  const user = (await db
     .prepare(`SELECT id, role, password_hash, onboarding_complete FROM users WHERE ${isEmail ? "email" : "phone"} = ?`)
-    .get(identifier) as { id: string; role: string; password_hash: string; onboarding_complete: number } | undefined;
+    .get(identifier)) as { id: string; role: string; password_hash: string; onboarding_complete: number } | undefined;
 
   if (!user || !verifyPassword(password, user.password_hash)) {
     return Response.json({ code: "INVALID_CREDENTIALS", message: "Incorrect phone/email or password." }, { status: 401 });

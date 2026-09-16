@@ -11,13 +11,13 @@ export async function GET() {
   }
 
   const db = getDb();
-  const totalRespondents = (db.prepare(`SELECT COUNT(*) as c FROM survey_responses`).get() as { c: number }).c;
-  const communities = (db.prepare(`SELECT COUNT(DISTINCT community) as c FROM survey_responses`).get() as { c: number }).c;
-  const lgas = (db.prepare(`SELECT COUNT(DISTINCT lga) as c FROM survey_responses`).get() as { c: number }).c;
-  const women = (db.prepare(`SELECT COUNT(*) as c FROM survey_responses WHERE respondent_gender = 'female'`).get() as { c: number }).c;
-  const men = (db.prepare(`SELECT COUNT(*) as c FROM survey_responses WHERE respondent_gender = 'male'`).get() as { c: number }).c;
+  const totalRespondents = ((await db.prepare(`SELECT COUNT(*) as c FROM survey_responses`).get()) as { c: number }).c;
+  const communities = ((await db.prepare(`SELECT COUNT(DISTINCT community) as c FROM survey_responses`).get()) as { c: number }).c;
+  const lgas = ((await db.prepare(`SELECT COUNT(DISTINCT lga) as c FROM survey_responses`).get()) as { c: number }).c;
+  const women = ((await db.prepare(`SELECT COUNT(*) as c FROM survey_responses WHERE respondent_gender = 'female'`).get()) as { c: number }).c;
+  const men = ((await db.prepare(`SELECT COUNT(*) as c FROM survey_responses WHERE respondent_gender = 'male'`).get()) as { c: number }).c;
 
-  const challengeRows = db.prepare(`SELECT answers FROM survey_responses`).all() as { answers: string }[];
+  const challengeRows = (await db.prepare(`SELECT answers FROM survey_responses`).all()) as { answers: string }[];
   const challengeCounts: Record<string, number> = {};
   for (const r of challengeRows) {
     try {
@@ -30,15 +30,15 @@ export async function GET() {
     .slice(0, 8)
     .map(([label, count]) => ({ label, count }));
 
-  const participantsCount = (db.prepare(`SELECT COUNT(*) as c FROM users WHERE role = 'participant'`).get() as { c: number }).c;
-  const activeStreaks = (db.prepare(`SELECT COUNT(*) as c FROM users WHERE role = 'participant' AND streak_count > 0`).get() as { c: number }).c;
-  const avgStreak = (db.prepare(`SELECT AVG(streak_count) as a FROM users WHERE role = 'participant'`).get() as { a: number | null }).a || 0;
+  const participantsCount = ((await db.prepare(`SELECT COUNT(*) as c FROM users WHERE role = 'participant'`).get()) as { c: number }).c;
+  const activeStreaks = ((await db.prepare(`SELECT COUNT(*) as c FROM users WHERE role = 'participant' AND streak_count > 0`).get()) as { c: number }).c;
+  const avgStreak = ((await db.prepare(`SELECT AVG(streak_count) as a FROM users WHERE role = 'participant'`).get()) as { a: number | null }).a || 0;
 
-  const mapDots = db
+  const mapDots = (await db
     .prepare(
       `SELECT lga, COUNT(*) as c FROM users WHERE role = 'participant' AND lga IS NOT NULL GROUP BY lga`
     )
-    .all() as { lga: string; c: number }[];
+    .all()) as { lga: string; c: number }[];
 
   return Response.json({
     kpis: { totalRespondents, communities, lgas, women, men },

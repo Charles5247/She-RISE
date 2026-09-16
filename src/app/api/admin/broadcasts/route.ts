@@ -9,7 +9,7 @@ export async function GET() {
   if (!["admin", "trainer"].includes(user.role)) return Response.json({ code: "FORBIDDEN", message: "Admin access required." }, { status: 403 });
 
   const db = getDb();
-  const broadcasts = db.prepare(`SELECT * FROM broadcasts ORDER BY sent_at DESC LIMIT 20`).all();
+  const broadcasts = await db.prepare(`SELECT * FROM broadcasts ORDER BY sent_at DESC LIMIT 20`).all();
   return Response.json({ broadcasts });
 }
 
@@ -32,12 +32,12 @@ export async function POST(req: Request) {
     query += " AND (lga = ? OR skill_category = ?)";
     params.push(audienceFilter, audienceFilter);
   }
-  const recipients = (db.prepare(query).all(...params) as { phone: string }[]).map((r) => r.phone);
+  const recipients = ((await db.prepare(query).all(...params)) as { phone: string }[]).map((r) => r.phone);
 
   const result = await smsProvider.sendBroadcast(recipients, title, body);
 
   const id = newId("bc");
-  db.prepare(
+  await db.prepare(
     `INSERT INTO broadcasts (id, sender_id, audience_filter, title, body, reach_count, open_count) VALUES (?, ?, ?, ?, ?, ?, 0)`
   ).run(id, user.id, audienceFilter || "all", title, body, result.reach);
 

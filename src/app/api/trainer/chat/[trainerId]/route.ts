@@ -12,11 +12,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ trainer
   const participantId = user.role === "trainer" ? null : user.id;
   const db = getDb();
 
-  const messages = db
+  const messages = (await db
     .prepare(
       `SELECT * FROM dm_messages WHERE trainer_id = ? AND participant_id = ? ORDER BY created_at ASC`
     )
-    .all(trainerId, participantId || trainerId) as Record<string, unknown>[];
+    .all(trainerId, participantId || trainerId)) as Record<string, unknown>[];
 
   return Response.json({ messages });
 }
@@ -36,16 +36,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ trainer
 
   const db = getDb();
   const id = newId("dm");
-  db.prepare(
+  await db.prepare(
     `INSERT INTO dm_messages (id, trainer_id, participant_id, sender_id, body) VALUES (?, ?, ?, ?, ?)`
   ).run(id, trainerId, participantId, user.id, body.trim());
 
   if (user.role !== "trainer") {
-    db.prepare(
+    await db.prepare(
       `INSERT INTO notifications (id, user_id, kind, actor_id, body) VALUES (?, ?, 'trainer_message', ?, ?)`
     ).run(newId("ntf"), trainerId, user.id, `${user.first_name} sent you a message`);
   } else {
-    db.prepare(
+    await db.prepare(
       `INSERT INTO notifications (id, user_id, kind, actor_id, body) VALUES (?, ?, 'trainer_message', ?, ?)`
     ).run(newId("ntf"), participantId, user.id, `${user.first_name} (Trainer) sent you a message`);
   }

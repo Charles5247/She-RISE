@@ -24,10 +24,10 @@ export async function POST(req: NextRequest) {
   }
 
   const db = getDb();
-  db.prepare(
+  await db.prepare(
     `UPDATE users SET first_name = ?, last_name = ?, age = ?, lga = ?, avatar_url = ?,
        language = COALESCE(?, language), skill_category = COALESCE(?, skill_category),
-       onboarding_complete = 1, updated_at = datetime('now')
+       onboarding_complete = 1, updated_at = NOW()
      WHERE id = ?`
   ).run(firstName, lastName || null, age || null, lga, avatarUrl || null, language || null, skillCategory || null, user.id);
 

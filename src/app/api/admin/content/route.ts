@@ -26,8 +26,8 @@ export async function GET(req: Request) {
   }
   query += " ORDER BY p.order_index, l.order_index";
 
-  const lessons = db.prepare(query).all(...params);
-  const pathways = db.prepare(`SELECT id, title, skill_category FROM pathways ORDER BY order_index`).all();
+  const lessons = await db.prepare(query).all(...params);
+  const pathways = await db.prepare(`SELECT id, title, skill_category FROM pathways ORDER BY order_index`).all();
 
   return Response.json({ lessons, pathways });
 }

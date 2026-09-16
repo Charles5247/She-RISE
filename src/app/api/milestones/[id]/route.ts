@@ -8,12 +8,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
 
   const db = getDb();
-  const milestone = db
+  const milestone = (await db
     .prepare(
       `SELECT m.*, u.first_name as verifier_first_name, u.is_verified_trainer as verifier_is_trainer
        FROM milestones m LEFT JOIN users u ON u.id = m.verifier_id WHERE m.id = ?`
     )
-    .get(id) as Record<string, unknown> | undefined;
+    .get(id)) as Record<string, unknown> | undefined;
 
   if (!milestone) return Response.json({ code: "NOT_FOUND", message: "Milestone not found." }, { status: 404 });
 

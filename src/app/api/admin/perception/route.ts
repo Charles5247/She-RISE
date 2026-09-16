@@ -39,7 +39,7 @@ export async function GET(req: Request) {
     query += " AND lga = ?";
     params.push(lga);
   }
-  const rows = db.prepare(query).all(...params) as Record<string, unknown>[];
+  const rows = (await db.prepare(query).all(...params)) as Record<string, unknown>[];
   const parsed = rows.map((r) => ({ ...r, lga: r.lga as string, answers: JSON.parse(r.answers as string) as Answers }));
 
   const total = parsed.length;

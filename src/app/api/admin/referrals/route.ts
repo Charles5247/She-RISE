@@ -14,9 +14,9 @@ export async function GET(req: Request) {
   const days = range === "30d" ? 30 : range === "90d" ? 90 : range === "ytd" ? 365 : 3650;
 
   const db = getDb();
-  const rows = db
-    .prepare(`SELECT stage, drop_off_reason, lga FROM referrals WHERE created_at > datetime('now', ?)`)
-    .all(`-${days} days`) as { stage: string; drop_off_reason: string | null; lga: string }[];
+  const rows = (await db
+    .prepare(`SELECT stage, drop_off_reason, lga FROM referrals WHERE created_at > NOW() - (? || ' days')::interval`)
+    .all(String(days))) as { stage: string; drop_off_reason: string | null; lga: string }[];
 
   const stages = ["referred", "screened", "eligible", "enrolled"] as const;
   const counts: Record<string, number> = { referred: 0, screened: 0, eligible: 0, enrolled: 0 };

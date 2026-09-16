@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   if (!pin) return Response.json({ code: "BAD_REQUEST", message: "PIN required." }, { status: 400 });
 
   const db = getDb();
-  const row = db.prepare(`SELECT pin_hash FROM users WHERE id = ?`).get(user.id) as { pin_hash: string | null };
+  const row = (await db.prepare(`SELECT pin_hash FROM users WHERE id = ?`).get(user.id)) as { pin_hash: string | null };
   if (!row.pin_hash) return Response.json({ code: "NO_PIN_SET", message: "No PIN has been set." }, { status: 400 });
 
   const ok = verifyPassword(pin, row.pin_hash);

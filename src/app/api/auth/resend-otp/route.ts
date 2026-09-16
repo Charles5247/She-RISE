@@ -9,9 +9,9 @@ export async function POST(req: NextRequest) {
 
   const db = getDb();
   const code = generateOtp();
-  db.prepare(
+  await db.prepare(
     `INSERT INTO otp_codes (id, destination, code, purpose, expires_at)
-     VALUES (?, ?, ?, 'signup', datetime('now', '+10 minutes'))`
+     VALUES (?, ?, ?, 'signup', NOW() + INTERVAL '10 minutes')`
   ).run(newId("otp"), identifier, code);
   await smsProvider.sendOtp(identifier, code);
 

@@ -27,26 +27,26 @@ export async function POST(req: NextRequest) {
   const isEmail = identifier.includes("@");
   const db = getDb();
 
-  const existing = db
+  const existing = (await db
     .prepare(`SELECT id FROM users WHERE ${isEmail ? "email" : "phone"} = ?`)
-    .get(identifier) as { id: string } | undefined;
+    .get(identifier)) as { id: string } | undefined;
 
   let userId: string;
   if (existing) {
     userId = existing.id;
-    db.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`).run(hashPassword(password), userId);
+    await db.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`).run(hashPassword(password), userId);
   } else {
     userId = newId("usr");
-    db.prepare(
+    await db.prepare(
       `INSERT INTO users (id, role, first_name, phone, email, password_hash, onboarding_complete)
        VALUES (?, 'participant', 'New Member', ?, ?, ?, 0)`
     ).run(userId, isEmail ? null : identifier, isEmail ? identifier : null, hashPassword(password));
   }
 
   const code = generateOtp();
-  db.prepare(
+  await db.prepare(
     `INSERT INTO otp_codes (id, destination, code, purpose, expires_at)
-     VALUES (?, ?, ?, 'signup', datetime('now', '+10 minutes'))`
+     VALUES (?, ?, ?, 'signup', NOW() + INTERVAL '10 minutes')`
   ).run(newId("otp"), identifier, code);
 
   await smsProvider.sendOtp(identifier, code);

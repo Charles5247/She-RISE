@@ -8,31 +8,31 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
 
   const db = getDb();
-  const post = db
+  const post = (await db
     .prepare(
       `SELECT p.*, u.first_name as author_first_name, u.avatar_url as author_avatar_url, u.is_verified_trainer as author_is_trainer
        FROM posts p JOIN users u ON u.id = p.author_id WHERE p.id = ?`
     )
-    .get(id) as Record<string, unknown> | undefined;
+    .get(id)) as Record<string, unknown> | undefined;
 
   if (!post) return Response.json({ code: "NOT_FOUND", message: "Post not found." }, { status: 404 });
 
-  const reactions = db.prepare(`SELECT kind, COUNT(*) as c FROM reactions WHERE post_id = ? GROUP BY kind`).all(id) as {
+  const reactions = (await db.prepare(`SELECT kind, COUNT(*) as c FROM reactions WHERE post_id = ? GROUP BY kind`).all(id)) as {
     kind: string;
     c: number;
   }[];
-  const namedReactors = db
+  const namedReactors = (await db
     .prepare(`SELECT u.first_name, rx.kind FROM reactions rx JOIN users u ON u.id = rx.user_id WHERE rx.post_id = ? ORDER BY rx.created_at DESC`)
-    .all(id) as { first_name: string; kind: string }[];
-  const myReaction = db.prepare(`SELECT kind FROM reactions WHERE post_id = ? AND user_id = ?`).get(id, user.id) as
+    .all(id)) as { first_name: string; kind: string }[];
+  const myReaction = (await db.prepare(`SELECT kind FROM reactions WHERE post_id = ? AND user_id = ?`).get(id, user.id)) as
     | { kind: string }
     | undefined;
-  const comments = db
+  const comments = (await db
     .prepare(
       `SELECT c.id, c.body, c.created_at, u.first_name, u.avatar_url, u.is_verified_trainer
        FROM comments c JOIN users u ON u.id = c.author_id WHERE c.post_id = ? ORDER BY c.created_at ASC`
     )
-    .all(id) as Record<string, unknown>[];
+    .all(id)) as Record<string, unknown>[];
 
   return Response.json({
     post: {

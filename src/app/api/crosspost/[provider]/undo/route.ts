@@ -10,7 +10,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ provide
   if (!postId) return Response.json({ code: "BAD_REQUEST", message: "postId required." }, { status: 400 });
 
   const db = getDb();
-  const post = db.prepare(`SELECT author_id, crosspost_fb_status, crosspost_li_status FROM posts WHERE id = ?`).get(postId) as
+  const post = (await db.prepare(`SELECT author_id, crosspost_fb_status, crosspost_li_status FROM posts WHERE id = ?`).get(postId)) as
     | { author_id: string; crosspost_fb_status: string; crosspost_li_status: string }
     | undefined;
   if (!post) return Response.json({ code: "NOT_FOUND", message: "Post not found." }, { status: 404 });
@@ -21,6 +21,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ provide
   if (currentStatus === "sent") {
     return Response.json({ code: "TOO_LATE", message: "This has already been posted." }, { status: 409 });
   }
-  db.prepare(`UPDATE posts SET ${column} = 'undone' WHERE id = ?`).run(postId);
+  await db.prepare(`UPDATE posts SET ${column} = 'undone' WHERE id = ?`).run(postId);
   return Response.json({ ok: true });
 }

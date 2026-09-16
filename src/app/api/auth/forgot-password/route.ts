@@ -12,14 +12,14 @@ export async function POST(req: NextRequest) {
 
   const db = getDb();
   const isEmail = identifier.includes("@");
-  const user = db.prepare(`SELECT id FROM users WHERE ${isEmail ? "email" : "phone"} = ?`).get(identifier);
+  const user = await db.prepare(`SELECT id FROM users WHERE ${isEmail ? "email" : "phone"} = ?`).get(identifier);
 
   // Always respond ok (don't leak account existence), but only actually send if found.
   if (user) {
     const code = generateOtp();
-    db.prepare(
+    await db.prepare(
       `INSERT INTO otp_codes (id, destination, code, purpose, expires_at)
-       VALUES (?, ?, ?, 'reset', datetime('now', '+10 minutes'))`
+       VALUES (?, ?, ?, 'reset', NOW() + INTERVAL '10 minutes')`
     ).run(newId("otp"), identifier, code);
     await smsProvider.sendOtp(identifier, code);
     return Response.json({ ok: true, devOtp: process.env.NODE_ENV !== "production" ? code : undefined });

@@ -7,13 +7,13 @@ export async function GET() {
   if (!user) return Response.json({ code: "UNAUTHORIZED", message: "Sign in required." }, { status: 401 });
 
   const db = getDb();
-  const row = db
+  const row = (await db
     .prepare(
       `SELECT first_name, last_name, bio, lga, avatar_url, xp_total, streak_count, crosspost_fb_connected, crosspost_li_connected
        FROM users WHERE id = ?`
     )
-    .get(user.id) as Record<string, unknown>;
-  const medalsEarned = (db.prepare(`SELECT COUNT(*) as c FROM medals WHERE user_id = ?`).get(user.id) as { c: number }).c;
+    .get(user.id)) as Record<string, unknown>;
+  const medalsEarned = ((await db.prepare(`SELECT COUNT(*) as c FROM medals WHERE user_id = ?`).get(user.id)) as { c: number }).c;
 
   return Response.json({
     profile: {
@@ -46,9 +46,9 @@ export async function PATCH(req: Request) {
     avatarUrl?: string;
   };
   const db = getDb();
-  db.prepare(
+  await db.prepare(
     `UPDATE users SET first_name = COALESCE(?, first_name), last_name = COALESCE(?, last_name),
-       bio = COALESCE(?, bio), lga = COALESCE(?, lga), avatar_url = COALESCE(?, avatar_url), updated_at = datetime('now')
+       bio = COALESCE(?, bio), lga = COALESCE(?, lga), avatar_url = COALESCE(?, avatar_url), updated_at = NOW()
      WHERE id = ?`
   ).run(firstName ?? null, lastName ?? null, bio ?? null, lga ?? null, avatarUrl ?? null, user.id);
   return Response.json({ ok: true });

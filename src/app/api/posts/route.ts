@@ -48,41 +48,43 @@ export async function GET(req: NextRequest) {
     params.push(cursor);
   }
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
-  const rows = db.prepare(`${base} ${where} ORDER BY p.created_at DESC LIMIT ?`).all(...params, limit) as PostRow[];
+  const rows = (await db.prepare(`${base} ${where} ORDER BY p.created_at DESC LIMIT ?`).all(...params, limit)) as unknown as PostRow[];
 
-  const posts = rows.map((r) => {
-    const reactions = db
-      .prepare(`SELECT kind, COUNT(*) as c FROM reactions WHERE post_id = ? GROUP BY kind`)
-      .all(r.id) as { kind: string; c: number }[];
-    const commentCount = (db.prepare(`SELECT COUNT(*) as c FROM comments WHERE post_id = ?`).get(r.id) as { c: number }).c;
-    const namedReactors = db
-      .prepare(
-        `SELECT u.first_name, rx.kind FROM reactions rx JOIN users u ON u.id = rx.user_id WHERE rx.post_id = ? ORDER BY rx.created_at DESC LIMIT 2`
-      )
-      .all(r.id) as { first_name: string; kind: string }[];
-    const myReaction = db
-      .prepare(`SELECT kind FROM reactions WHERE post_id = ? AND user_id = ?`)
-      .get(r.id, user.id) as { kind: string } | undefined;
+  const posts = await Promise.all(
+    rows.map(async (r) => {
+      const reactions = (await db
+        .prepare(`SELECT kind, COUNT(*) as c FROM reactions WHERE post_id = ? GROUP BY kind`)
+        .all(r.id)) as { kind: string; c: number }[];
+      const commentCount = ((await db.prepare(`SELECT COUNT(*) as c FROM comments WHERE post_id = ?`).get(r.id)) as { c: number }).c;
+      const namedReactors = (await db
+        .prepare(
+          `SELECT u.first_name, rx.kind FROM reactions rx JOIN users u ON u.id = rx.user_id WHERE rx.post_id = ? ORDER BY rx.created_at DESC LIMIT 2`
+        )
+        .all(r.id)) as { first_name: string; kind: string }[];
+      const myReaction = (await db
+        .prepare(`SELECT kind FROM reactions WHERE post_id = ? AND user_id = ?`)
+        .get(r.id, user.id)) as { kind: string } | undefined;
 
-    return {
-      id: r.id,
-      author: { id: r.author_id, firstName: r.author_first_name, avatarUrl: r.author_avatar_url, isVerifiedTrainer: !!r.author_is_trainer },
-      body: r.body,
-      photoUrl: r.photo_url,
-      milestoneType: r.milestone_type,
-      crosspostFb: !!r.crosspost_fb,
-      crosspostLinkedin: !!r.crosspost_linkedin,
-      crosspostFbStatus: r.crosspost_fb_status,
-      crosspostLiStatus: r.crosspost_li_status,
-      circleId: r.circle_id,
-      createdAt: r.created_at,
-      reactions: { cheer: 0, hold: 0, celebrate: 0, ...Object.fromEntries(reactions.map((x) => [x.kind, x.c])) },
-      reactionTotal: reactions.reduce((s, x) => s + x.c, 0),
-      namedReactors,
-      myReaction: myReaction?.kind ?? null,
-      commentCount,
-    };
-  });
+      return {
+        id: r.id,
+        author: { id: r.author_id, firstName: r.author_first_name, avatarUrl: r.author_avatar_url, isVerifiedTrainer: !!r.author_is_trainer },
+        body: r.body,
+        photoUrl: r.photo_url,
+        milestoneType: r.milestone_type,
+        crosspostFb: !!r.crosspost_fb,
+        crosspostLinkedin: !!r.crosspost_linkedin,
+        crosspostFbStatus: r.crosspost_fb_status,
+        crosspostLiStatus: r.crosspost_li_status,
+        circleId: r.circle_id,
+        createdAt: r.created_at,
+        reactions: { cheer: 0, hold: 0, celebrate: 0, ...Object.fromEntries(reactions.map((x) => [x.kind, x.c])) },
+        reactionTotal: reactions.reduce((s, x) => s + x.c, 0),
+        namedReactors,
+        myReaction: myReaction?.kind ?? null,
+        commentCount,
+      };
+    })
+  );
 
   const nextCursor = rows.length === limit ? rows[rows.length - 1].created_at : null;
   return Response.json({ posts, nextCursor });
@@ -125,10 +127,10 @@ export async function POST(req: NextRequest) {
     crosspostCopy = gen.copy;
   }
 
-  db.prepare(
+  await db.prepare(
     `INSERT INTO posts (id, author_id, body, photo_url, milestone_type, crosspost_fb, crosspost_linkedin, crosspost_copy,
        crosspost_fb_status, crosspost_li_status, circle_id, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`
   ).run(
     postId, user.id, text.trim(), photoUrl || null, mType,
     crosspostFb ? 1 : 0, crosspostLinkedin ? 1 : 0, crosspostCopy,
@@ -137,7 +139,7 @@ export async function POST(req: NextRequest) {
   );
 
   if (mType !== "none") {
-    db.prepare(
+    await db.prepare(
       `INSERT INTO milestones (id, user_id, post_id, type, amount, story) VALUES (?, ?, ?, ?, ?, ?)`
     ).run(newId("ms"), user.id, postId, mType, milestoneAmount ?? null, text.trim());
   }

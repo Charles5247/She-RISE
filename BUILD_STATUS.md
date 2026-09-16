@@ -26,14 +26,13 @@ Every entity from spec Section 9 exists with the exact field names specified:
 `dm_messages`, `notifications`, `referrals`, `survey_responses`,
 `export_audit_log`, `broadcasts`, `content_lessons_meta`.
 
-## 🚧 IN PROGRESS — Postgres migration (started this pass, not finished)
+## ✅ Postgres migration — COMPLETE
 
 `better-sqlite3` is a native Node addon and failed to load on a contributor's
 Windows machine (`Cannot find module '...\better_sqlite3.node'`), 500-ing
 every write endpoint. That risk repeats on any serverless deploy target, so
-rather than patch around it we're migrating the DB client to PostgreSQL —
-using the `postgres` npm package (a pure-JS client, zero native deps) — for
-real, per the plan already noted in the schema header.
+rather than patch around it the DB client was migrated to real PostgreSQL —
+using the `postgres` npm package (a pure-JS client, zero native deps).
 
 **Done so far:**
 - Installed and started a real local PostgreSQL 17 server in this sandbox
@@ -72,48 +71,48 @@ real, per the plan already noted in the schema header.
   transaction API and its one call site
   (`src/app/api/admin/exports/route.ts`) updated to `await` it and use the
   transaction-scoped `db` handle it's given.
-
-**NOT done yet — the app will not build/run until this is finished:**
-- The other ~37 files that call `db.prepare(...).get()/.all()/.run()`
-  (all `src/app/api/**/route.ts` files, `src/lib/auth.ts`, `src/lib/seed.ts`,
-  and `src/app/api/lessons/[id]/complete/route.ts`'s `db.transaction()`
-  block) still call these methods **without `await`**, and their TypeScript
-  return-type casts (e.g. `db.prepare(...).get(...) as {...}`) now need to
-  cast a `Promise<...>` instead of the row shape directly — `npx tsc
-  --noEmit` currently reports ~30 type errors of exactly this shape. This is
-  mechanical but has NOT been done file-by-file yet.
-- SQL-dialect fixes not yet applied: `datetime('now', ...)` → `NOW()` /
-  `INTERVAL` (14 call sites across 12 files); `INSERT OR IGNORE` →
-  `ON CONFLICT (...) DO NOTHING` (4 call sites, needs the new
-  `UNIQUE(user_id, code)` constraint on `medals`); a string-based date-bucket
-  comparison in `src/app/api/notifications/route.ts` that assumes
-  `created_at` is a raw string (it'll come back as a `Date` from Postgres);
-  two N+1 nested-query loops (`admin/participants/route.ts`,
-  `posts/route.ts`) that need `Promise.all`/restructuring once their inner
-  queries become async.
-- `src/lib/seed.ts` not yet converted to the async client, and does not yet
-  have the fixed/stable demo participant credentials called for below.
-- Schema not yet loaded into the live DB via the app itself (it was loaded
-  manually with a throwaway script to *validate* the schema, then dropped
-  again) — re-seeding, and re-running the PR #1 curl verification suite
-  against Postgres, are both still outstanding.
-- **`npm run build` will currently fail** until the remaining ~37 files are
-  converted — do not assume this is deployable yet.
-
-If you're picking this up: convert one file at a time, add `await` at every
-`.get()/.all()/.run()` call and every `db.transaction(...)` invocation,
-re-run `npx tsc --noEmit` after each file to confirm the error count is
-dropping, then re-seed and re-run the curl suite once all ~37 are done.
+- All remaining ~37 files (`src/lib/auth.ts`, `src/lib/seed.ts`, every
+  `src/app/api/**/route.ts` file, and
+  `src/app/api/lessons/[id]/complete/route.ts`'s `db.transaction()` block)
+  converted to `await` every `.get()/.all()/.run()` call.
+- SQL-dialect fixes applied: `datetime('now', ...)` → `NOW()` / `NOW() +
+  INTERVAL '...'` / `NOW() - (? || ' days')::interval` (12 files);
+  `INSERT OR IGNORE` → `ON CONFLICT (...) DO NOTHING` (4 files, using the
+  new `UNIQUE(user_id, code)` constraint on `medals` and the existing
+  `UNIQUE(circle_id, user_id)` / `UNIQUE(post_id, user_id)` PK/constraints);
+  the string-based date-bucket comparison in
+  `src/app/api/notifications/route.ts` now converts `created_at` (a real
+  `Date` from Postgres) via `.toISOString()` before comparing; the two N+1
+  nested-query loops (`admin/participants/route.ts`, `posts/route.ts`,
+  `pathways/route.ts`) restructured with `Promise.all` over an async map.
+- `src/lib/seed.ts` fully converted to the async client, AND given the
+  required fixed/stable demo participant: phone `08100000001` / password
+  `password123`, hardcoded (not randomized) so it survives every reseed —
+  see README.md's "Demo credentials" table.
+- Schema loads automatically on first request via the app itself (no manual
+  step required, though `psql -f schema.sql` also works — see README.md
+  "Database setup"). Re-seeded from empty and re-ran the full PR #1 curl
+  verification suite against live Postgres: signup → OTP generation → OTP
+  verify → session cookie; admin login; demo participant login; referrals
+  funnel (with real funnel counts/drop-off math); audited export rejected
+  without a `purpose` and accepted with one, with the `export_audit_log` row
+  confirmed written transactionally (`psql` query showed the row present
+  after a successful export). All passed.
+- `npx tsc --noEmit`: **0 errors.** `npm run lint`: **0 errors, 0 warnings.**
+  `npm run build`: **succeeds** — all 37 API routes + `/` + `/signup`
+  compile and the production build completes cleanly.
 
 **Historical note (superseded by the above):** this previously ran on SQLite
 (`better-sqlite3`) as a stand-in for Supabase/Postgres, because no Supabase
 project credentials existed in this environment. The schema was written to
 be a literal 1:1 match to the spec's Postgres model specifically so this
-swap wouldn't require a redesign — which the work above is now proving out.
+swap wouldn't require a redesign — which the migration above proved out.
 
 ### Access control (`src/lib/access.ts`)
-SQLite has no native Row Level Security, so every rule from spec Section 9 is
-enforced in this file instead of ad hoc in routes:
+Postgres row-level security was evaluated but this stays application-layer:
+the access rules below are enforced centrally in this one file instead of ad
+hoc in every route, which keeps them auditable and DB-engine-agnostic. Every
+rule from spec Section 9 is enforced here:
 - Participants can only read their own `trainer_notes`.
 - `last_name` is stripped from every participant-facing/public read (see
   `toPublicUser`, and the explicit per-route handling in `/api/posts`,
@@ -124,10 +123,13 @@ enforced in this file instead of ad hoc in routes:
   `survey_responses`, and the enumerator-monitoring block are all excluded for
   that role (see `/api/admin/participants/[id]` and `/api/admin/perception`).
 - `withExportAudit()` wraps every `/api/admin/exports` read in the **same
-  better-sqlite3 transaction** as the `export_audit_log` insert — if the
-  audit write fails, the transaction rolls back and the export fails too.
-  Tested: a request without `purpose` is rejected before any data leaves the
-  server.
+  Postgres transaction** (via postgres.js's `sql.begin()`, through the
+  `db.transaction()` shim in `src/lib/db.ts`) as the `export_audit_log`
+  insert — if the audit write fails, the transaction rolls back and the
+  export fails too. Tested: a request without `purpose` is rejected before
+  any data leaves the server, and a successful export's audit row was
+  confirmed via a direct `psql` query (see the Postgres migration section
+  above).
 
 ### Auth (`src/lib/auth.ts`, `/api/auth/*`, `/api/admin/login`)
 Cookie-based sessions (httpOnly, scrypt-hashed passwords, hashed session
@@ -245,19 +247,13 @@ drop-off reasons, 340 survey responses (baseline + midline) with the exact
 - Facebook/LinkedIn app review timeline.
 - SMS provider selection.
 
-## Running locally
+## Running locally, demo credentials, and deploying the two surfaces
 
-```bash
-npm install
-npm run dev      # http://localhost:3000 — both surfaces reachable
-```
-
-Demo accounts (seeded automatically on first request, password
-`password123` for all, participant PIN is `1234`):
-- Admin: `admin@sherise.org`
-- Sponsor: `sponsor@bluesapphire.ng`
-- Trainers/participants: seeded with generated phone numbers — inspect via
-  `/api/admin/participants` after logging in as admin.
+Moved to [`README.md`](./README.md) — "Quick start", "Demo credentials", and
+"Deploying the two surfaces separately" — so there's one place to look
+instead of two. That includes the fixed/stable demo participant login
+(`08100000001` / `password123`), the Postgres/Supabase setup steps, and the
+per-surface `NEXT_PUBLIC_APP_SURFACE` deployment steps.
 
 ## Building for production
 
@@ -266,24 +262,12 @@ npm run build     # runs `next build --webpack` — see note below
 npm run start
 ```
 
-**Note on Turbopack:** `next build` (Turbopack, the Next.js 16 default) hangs
-indefinitely in this sandbox with this route count + the native
-`better-sqlite3` dependency — root cause not fully isolated, may be specific
-to this Next.js 16.3.5 canary. `next build --webpack` completes reliably in
-~45s and produces a working production server (verified: all 37 API routes
-compile, `next start` serves correctly). `package.json`'s `build` script is
-set to `next build --webpack` for this reason. Worth re-testing plain
-`next build` against a newer stable Next.js release before assuming this is
-permanent.
-
-## Deploying the two surfaces separately
-
-Per the requirement that participant and admin deploy to separate domains
-from one codebase:
-1. Deploy this repo twice (two Vercel/Render projects, or two Cloudflare
-   Pages projects).
-2. On the `sherise.com` deployment, set `NEXT_PUBLIC_APP_SURFACE=participant`.
-3. On the `sherise-admin.com` deployment, set `NEXT_PUBLIC_APP_SURFACE=admin`.
-4. Both need the same database connection (once migrated off SQLite to a
-   real hosted Postgres/Supabase instance — SQLite is file-based and won't
-   work across two separate serverless deployments sharing state).
+**Note on Turbopack:** `next build` (Turbopack, the Next.js 16 default) hung
+indefinitely in this sandbox with this route count while the app still ran
+on `better-sqlite3` — root cause was never fully isolated (may be specific
+to this Next.js 16.3.5 canary, or to the native addon itself). Not
+re-tested since the Postgres migration (which removed the native dependency
+entirely); plain `next build` is worth re-trying now, but `next build
+--webpack` is proven reliable (completes in ~45s, all 37 API routes
+compile, `next start` serves correctly), so `package.json`'s `build` script
+stays on `--webpack` until Turbopack is re-verified.

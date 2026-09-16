@@ -18,9 +18,7 @@ const DATABASE_URL =
   process.env.DATABASE_URL || "postgresql://postgres:sherise_dev_pw@localhost:5432/sherise";
 
 declare global {
-  // eslint-disable-next-line no-var
   var __sheriseSql: postgres.Sql | undefined;
-  // eslint-disable-next-line no-var
   var __sheriseSchemaReady: Promise<void> | undefined;
 }
 

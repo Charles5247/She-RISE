@@ -8,14 +8,14 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
 
   const db = getDb();
-  const lesson = db.prepare(`SELECT * FROM lessons WHERE id = ?`).get(id) as Record<string, unknown> | undefined;
+  const lesson = (await db.prepare(`SELECT * FROM lessons WHERE id = ?`).get(id)) as Record<string, unknown> | undefined;
   if (!lesson) return Response.json({ code: "NOT_FOUND", message: "Lesson not found." }, { status: 404 });
 
-  const progress = db
+  const progress = (await db
     .prepare(`SELECT * FROM lesson_progress WHERE user_id = ? AND lesson_id = ?`)
-    .get(user.id, id) as Record<string, unknown> | undefined;
+    .get(user.id, id)) as Record<string, unknown> | undefined;
 
-  const streak = db.prepare(`SELECT streak_count FROM users WHERE id = ?`).get(user.id) as { streak_count: number };
+  const streak = (await db.prepare(`SELECT streak_count FROM users WHERE id = ?`).get(user.id)) as { streak_count: number };
 
   return Response.json({
     lesson: {

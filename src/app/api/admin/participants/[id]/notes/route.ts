@@ -19,7 +19,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const db = getDb();
   const noteId = newId("tn");
-  db.prepare(`INSERT INTO trainer_notes (id, trainer_id, participant_id, body) VALUES (?, ?, ?, ?)`).run(
+  await db.prepare(`INSERT INTO trainer_notes (id, trainer_id, participant_id, body) VALUES (?, ?, ?, ?)`).run(
     noteId,
     effectiveTrainerId,
     id,

@@ -8,16 +8,16 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
 
   const db = getDb();
-  const pathway = db.prepare(`SELECT * FROM pathways WHERE id = ?`).get(id) as Record<string, unknown> | undefined;
+  const pathway = (await db.prepare(`SELECT * FROM pathways WHERE id = ?`).get(id)) as Record<string, unknown> | undefined;
   if (!pathway) return Response.json({ code: "NOT_FOUND", message: "Pathway not found." }, { status: 404 });
 
-  const lessons = db
+  const lessons = (await db
     .prepare(
       `SELECT l.*, lp.status as progress_status, lp.completed_at, lp.downloaded_offline
        FROM lessons l LEFT JOIN lesson_progress lp ON lp.lesson_id = l.id AND lp.user_id = ?
        WHERE l.pathway_id = ? ORDER BY l.order_index`
     )
-    .all(user.id, id) as Record<string, unknown>[];
+    .all(user.id, id)) as Record<string, unknown>[];
 
   return Response.json({
     pathway,

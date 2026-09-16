@@ -7,12 +7,12 @@ export async function GET() {
   const user = await getSessionUser();
   if (!user) return Response.json({ code: "UNAUTHORIZED", message: "Sign in required." }, { status: 401 });
   const db = getDb();
-  const row = db
+  const row = (await db
     .prepare(
       `SELECT language, wifi_only_downloads, panic_hide_enabled, crosspost_fb_connected, crosspost_li_connected
        FROM users WHERE id = ?`
     )
-    .get(user.id) as Record<string, unknown>;
+    .get(user.id)) as Record<string, unknown>;
   return Response.json({
     settings: {
       language: row.language,
@@ -37,14 +37,14 @@ export async function PATCH(req: Request) {
     pin?: string;
   };
   const db = getDb();
-  db.prepare(
+  await db.prepare(
     `UPDATE users SET
        language = COALESCE(?, language),
        wifi_only_downloads = COALESCE(?, wifi_only_downloads),
        panic_hide_enabled = COALESCE(?, panic_hide_enabled),
        crosspost_fb_connected = COALESCE(?, crosspost_fb_connected),
        crosspost_li_connected = COALESCE(?, crosspost_li_connected),
-       updated_at = datetime('now')
+       updated_at = NOW()
      WHERE id = ?`
   ).run(
     language ?? null,
@@ -56,7 +56,7 @@ export async function PATCH(req: Request) {
   );
   if (pin) {
     const { hashPassword } = await import("@/lib/auth");
-    db.prepare(`UPDATE users SET pin_hash = ? WHERE id = ?`).run(hashPassword(pin), user.id);
+    await db.prepare(`UPDATE users SET pin_hash = ? WHERE id = ?`).run(hashPassword(pin), user.id);
   }
   return Response.json({ ok: true });
 }

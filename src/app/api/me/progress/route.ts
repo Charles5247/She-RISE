@@ -7,21 +7,21 @@ export async function GET() {
   if (!user) return Response.json({ code: "UNAUTHORIZED", message: "Sign in required." }, { status: 401 });
 
   const db = getDb();
-  const stats = db.prepare(`SELECT xp_total, streak_count FROM users WHERE id = ?`).get(user.id) as {
+  const stats = (await db.prepare(`SELECT xp_total, streak_count FROM users WHERE id = ?`).get(user.id)) as {
     xp_total: number;
     streak_count: number;
   };
 
-  const medals = db.prepare(`SELECT * FROM medals WHERE user_id = ? ORDER BY earned_at DESC`).all(user.id);
+  const medals = await db.prepare(`SELECT * FROM medals WHERE user_id = ? ORDER BY earned_at DESC`).all(user.id);
 
-  const totalLessons = (db.prepare(`SELECT COUNT(*) as c FROM lessons`).get() as { c: number }).c;
+  const totalLessons = ((await db.prepare(`SELECT COUNT(*) as c FROM lessons`).get()) as { c: number }).c;
   const doneLessons = (
-    db.prepare(`SELECT COUNT(*) as c FROM lesson_progress WHERE user_id = ? AND status = 'done'`).get(user.id) as { c: number }
+    (await db.prepare(`SELECT COUNT(*) as c FROM lesson_progress WHERE user_id = ? AND status = 'done'`).get(user.id)) as { c: number }
   ).c;
 
-  const milestones = db
+  const milestones = (await db
     .prepare(`SELECT * FROM milestones WHERE user_id = ? ORDER BY created_at DESC`)
-    .all(user.id) as Record<string, unknown>[];
+    .all(user.id)) as Record<string, unknown>[];
 
   const incomeLog = milestones
     .filter((m) => m.type === "first_income" && m.amount)

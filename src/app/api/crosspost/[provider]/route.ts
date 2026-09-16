@@ -16,9 +16,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ provide
   if (!postId) return Response.json({ code: "BAD_REQUEST", message: "postId required." }, { status: 400 });
 
   const db = getDb();
-  const post = db
+  const post = (await db
     .prepare(`SELECT author_id, crosspost_copy, photo_url, crosspost_fb_status, crosspost_li_status FROM posts WHERE id = ?`)
-    .get(postId) as { author_id: string; crosspost_copy: string | null; photo_url: string | null; crosspost_fb_status: string; crosspost_li_status: string } | undefined;
+    .get(postId)) as { author_id: string; crosspost_copy: string | null; photo_url: string | null; crosspost_fb_status: string; crosspost_li_status: string } | undefined;
 
   if (!post) return Response.json({ code: "NOT_FOUND", message: "Post not found." }, { status: 404 });
   if (post.author_id !== user.id) return Response.json({ code: "FORBIDDEN", message: "Not your post." }, { status: 403 });
@@ -35,7 +35,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ provide
   const result = await client.send({ userId: user.id, copy: post.crosspost_copy || "", photoUrl: post.photo_url });
 
   const column = provider === "fb" ? "crosspost_fb_status" : "crosspost_li_status";
-  db.prepare(`UPDATE posts SET ${column} = ? WHERE id = ?`).run(result.ok ? "sent" : "failed", postId);
+  await db.prepare(`UPDATE posts SET ${column} = ? WHERE id = ?`).run(result.ok ? "sent" : "failed", postId);
 
   return Response.json({ ok: result.ok, externalId: result.externalId, error: result.error });
 }

@@ -1,12 +1,14 @@
 -- SheRISE data model — implements Section 9 of the build spec exactly.
--- Engine: SQLite (better-sqlite3) standing in for Supabase/Postgres in this
--- environment (no external DB credentials available). Field names, entities,
--- and relationships match the spec 1:1 so a swap to Postgres/Supabase later
--- is a drop-in migration, not a redesign. RLS policies described in the spec
--- are enforced at the application layer in src/lib/access.ts since SQLite
--- has no native row-level security — see that file for the exact rules.
+-- Engine: PostgreSQL (via the `postgres` npm package — a pure-JS client with
+-- no native binary, so it runs identically on any contributor machine and
+-- any serverless deploy target). Point DATABASE_URL at a local Postgres for
+-- development or at a hosted Supabase/Postgres instance for staging/prod —
+-- see README.md "Database setup" for exact commands. Table and field names
+-- match the spec's Section 9 model 1:1.
 
-PRAGMA foreign_keys = ON;
+-- Timestamp columns use TIMESTAMPTZ (not TEXT) — this is the idiomatic
+-- Postgres type and lets us use NOW()/INTERVAL date math directly in
+-- queries instead of SQLite's datetime() string functions.
 
 CREATE TABLE IF NOT EXISTS users (
   id                    TEXT PRIMARY KEY,
@@ -28,12 +30,12 @@ CREATE TABLE IF NOT EXISTS users (
   crosspost_li_connected  INTEGER NOT NULL DEFAULT 0,
   xp_total              INTEGER NOT NULL DEFAULT 0,
   streak_count          INTEGER NOT NULL DEFAULT 0,
-  last_lesson_date      TEXT,
+  last_lesson_date      TEXT,                        -- 'YYYY-MM-DD' string, compared by exact equality only
   skill_category        TEXT,                        -- chosen at onboarding (pick-path screen)
   age                   INTEGER,
   onboarding_complete   INTEGER NOT NULL DEFAULT 0,
-  created_at            TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at            TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS sponsor_profiles (
@@ -52,8 +54,8 @@ CREATE TABLE IF NOT EXISTS sessions (
   id                    TEXT PRIMARY KEY,
   user_id               TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   token_hash            TEXT NOT NULL,
-  created_at            TEXT NOT NULL DEFAULT (datetime('now')),
-  expires_at            TEXT NOT NULL
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at            TIMESTAMPTZ NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS otp_codes (
@@ -61,8 +63,8 @@ CREATE TABLE IF NOT EXISTS otp_codes (
   destination           TEXT NOT NULL,   -- phone or email
   code                  TEXT NOT NULL,
   purpose               TEXT NOT NULL DEFAULT 'signup',
-  created_at            TEXT NOT NULL DEFAULT (datetime('now')),
-  expires_at            TEXT NOT NULL,
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at            TIMESTAMPTZ NOT NULL,
   consumed              INTEGER NOT NULL DEFAULT 0
 );
 
@@ -71,13 +73,13 @@ CREATE TABLE IF NOT EXISTS circles (
   name                  TEXT NOT NULL,
   description           TEXT,
   lga                   TEXT,
-  created_at            TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS circle_members (
   circle_id             TEXT NOT NULL REFERENCES circles(id) ON DELETE CASCADE,
   user_id               TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  joined_at             TEXT NOT NULL DEFAULT (datetime('now')),
+  joined_at             TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (circle_id, user_id)
 );
 
@@ -93,7 +95,7 @@ CREATE TABLE IF NOT EXISTS posts (
   crosspost_fb_status   TEXT NOT NULL DEFAULT 'idle' CHECK (crosspost_fb_status IN ('idle','queued','sent','undone','failed')),
   crosspost_li_status   TEXT NOT NULL DEFAULT 'idle' CHECK (crosspost_li_status IN ('idle','queued','sent','undone','failed')),
   circle_id             TEXT REFERENCES circles(id) ON DELETE SET NULL,
-  created_at            TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS reactions (
@@ -101,7 +103,7 @@ CREATE TABLE IF NOT EXISTS reactions (
   post_id               TEXT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
   user_id               TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   kind                  TEXT NOT NULL CHECK (kind IN ('cheer','hold','celebrate')),
-  created_at            TEXT NOT NULL DEFAULT (datetime('now')),
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (post_id, user_id)
 );
 
@@ -110,7 +112,7 @@ CREATE TABLE IF NOT EXISTS comments (
   post_id               TEXT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
   author_id             TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   body                  TEXT NOT NULL,
-  created_at            TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS pathways (
@@ -137,7 +139,7 @@ CREATE TABLE IF NOT EXISTS lesson_progress (
   user_id               TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   lesson_id             TEXT NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
   status                TEXT NOT NULL DEFAULT 'locked' CHECK (status IN ('locked','current','done')),
-  completed_at          TEXT,
+  completed_at          TIMESTAMPTZ,
   downloaded_offline    INTEGER NOT NULL DEFAULT 0,
   accuracy              INTEGER,
   PRIMARY KEY (user_id, lesson_id)
@@ -151,7 +153,7 @@ CREATE TABLE IF NOT EXISTS milestones (
   amount                REAL,
   verifier_id           TEXT REFERENCES users(id) ON DELETE SET NULL,
   story                 TEXT,
-  created_at            TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS medals (
@@ -159,7 +161,8 @@ CREATE TABLE IF NOT EXISTS medals (
   user_id               TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   code                  TEXT NOT NULL,
   label                 TEXT NOT NULL,
-  earned_at             TEXT NOT NULL DEFAULT (datetime('now'))
+  earned_at             TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, code)
 );
 
 CREATE TABLE IF NOT EXISTS trainer_notes (
@@ -167,7 +170,7 @@ CREATE TABLE IF NOT EXISTS trainer_notes (
   trainer_id            TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   participant_id        TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   body                  TEXT NOT NULL,
-  created_at            TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS dm_messages (
@@ -176,7 +179,7 @@ CREATE TABLE IF NOT EXISTS dm_messages (
   participant_id        TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   sender_id             TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   body                  TEXT NOT NULL,
-  created_at            TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS notifications (
@@ -186,8 +189,8 @@ CREATE TABLE IF NOT EXISTS notifications (
   actor_id              TEXT REFERENCES users(id) ON DELETE SET NULL,
   post_id               TEXT REFERENCES posts(id) ON DELETE CASCADE,
   body                  TEXT NOT NULL,
-  read_at               TEXT,
-  created_at            TEXT NOT NULL DEFAULT (datetime('now'))
+  read_at               TIMESTAMPTZ,
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS referrals (
@@ -197,8 +200,8 @@ CREATE TABLE IF NOT EXISTS referrals (
   lga                   TEXT NOT NULL,
   stage                 TEXT NOT NULL DEFAULT 'referred' CHECK (stage IN ('referred','screened','eligible','enrolled')),
   drop_off_reason       TEXT,
-  created_at            TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at            TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS survey_responses (
@@ -212,8 +215,8 @@ CREATE TABLE IF NOT EXISTS survey_responses (
   gps_lng               REAL,
   duration_seconds      INTEGER,
   is_duplicate          INTEGER NOT NULL DEFAULT 0,
-  answers               TEXT NOT NULL DEFAULT '{}',  -- JSONB equivalent
-  collected_at          TEXT NOT NULL DEFAULT (datetime('now'))
+  answers               JSONB NOT NULL DEFAULT '{}'::jsonb,
+  collected_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS export_audit_log (
@@ -221,7 +224,7 @@ CREATE TABLE IF NOT EXISTS export_audit_log (
   admin_id              TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   what                  TEXT NOT NULL,
   purpose               TEXT NOT NULL,
-  exported_at           TEXT NOT NULL DEFAULT (datetime('now'))
+  exported_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS broadcasts (
@@ -230,7 +233,7 @@ CREATE TABLE IF NOT EXISTS broadcasts (
   audience_filter       TEXT NOT NULL,
   title                 TEXT NOT NULL,
   body                  TEXT NOT NULL,
-  sent_at               TEXT NOT NULL DEFAULT (datetime('now')),
+  sent_at               TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   reach_count           INTEGER NOT NULL DEFAULT 0,
   open_count            INTEGER NOT NULL DEFAULT 0
 );

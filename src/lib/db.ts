@@ -1,32 +1,150 @@
-import Database from "better-sqlite3";
+import postgres from "postgres";
 import fs from "node:fs";
 import path from "node:path";
 
-// SQLite standing in for Supabase/PostgreSQL (see schema.sql header note).
-// A single file DB lives in .data/sherise.db (gitignored, created on first run).
-
-const DATA_DIR = path.join(process.cwd(), ".data");
-const DB_PATH = path.join(DATA_DIR, "sherise.db");
+// PostgreSQL via the `postgres` npm package (postgres.js) — a pure-JS client
+// with zero native dependencies, so it runs identically on any contributor
+// machine (Windows included) and any serverless deploy target. This replaces
+// the previous better-sqlite3 client, which required a prebuilt native
+// binary matching the exact OS/arch/Node ABI and broke on Windows dev
+// machines and would have repeated the same risk on serverless hosts.
+//
+// DATABASE_URL points at either a local Postgres (see README.md "Database
+// setup" for the exact `createdb`/`psql -f schema.sql` commands) or a hosted
+// Supabase/Postgres instance for staging/prod. Falls back to the sandbox's
+// local dev database if unset, purely so `npm run dev` works out of the box
+// in this environment — production deploys MUST set DATABASE_URL explicitly.
+const DATABASE_URL =
+  process.env.DATABASE_URL || "postgresql://postgres:sherise_dev_pw@localhost:5432/sherise";
 
 declare global {
-  var __sheriseDb: Database.Database | undefined;
+  // eslint-disable-next-line no-var
+  var __sheriseSql: postgres.Sql | undefined;
+  // eslint-disable-next-line no-var
+  var __sheriseSchemaReady: Promise<void> | undefined;
 }
 
-function createDb(): Database.Database {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-  const db = new Database(DB_PATH);
-  db.pragma("journal_mode = WAL");
-  db.pragma("foreign_keys = ON");
-  const schema = fs.readFileSync(path.join(process.cwd(), "src/lib/schema.sql"), "utf-8");
-  db.exec(schema);
-  return db;
+function createSql(): postgres.Sql {
+  return postgres(DATABASE_URL, {
+    max: 5,
+    // Postgres returns COUNT(*)/COUNT(DISTINCT ...) as `bigint` (OID 20) and
+    // AVG(...) as `numeric` (OID 1700) — neither has a default JS parser in
+    // postgres.js (bigint would otherwise arrive as a raw string, and the
+    // built-in `postgres.BigInt` helper returns an actual BigInt, which
+    // crashes `JSON.stringify`/`Response.json`). Every count/avg in this
+    // codebase fits safely in a JS `number`, so we coerce both to `number`
+    // here, once, instead of touching every call site.
+    types: {
+      bigint: {
+        to: 20,
+        from: [20],
+        parse: (x: string) => Number(x),
+        serialize: (x: number) => String(x),
+      },
+      numeric: {
+        to: 1700,
+        from: [1700],
+        parse: (x: string) => Number(x),
+        serialize: (x: number) => String(x),
+      },
+    },
+  });
 }
 
-export function getDb(): Database.Database {
-  if (!global.__sheriseDb) {
-    global.__sheriseDb = createDb();
+function sqlClient(): postgres.Sql {
+  if (!global.__sheriseSql) {
+    global.__sheriseSql = createSql();
   }
-  return global.__sheriseDb;
+  return global.__sheriseSql;
+}
+
+async function ensureSchema(client: postgres.Sql): Promise<void> {
+  if (!global.__sheriseSchemaReady) {
+    global.__sheriseSchemaReady = (async () => {
+      const schema = fs.readFileSync(path.join(process.cwd(), "src/lib/schema.sql"), "utf-8");
+      await client.unsafe(schema);
+    })();
+  }
+  return global.__sheriseSchemaReady;
+}
+
+/**
+ * Converts a `.prepare(sql)` call's placeholder style into postgres.js's
+ * `$1, $2, ...` numbered-parameter style, and normalizes the two calling
+ * conventions used across this codebase:
+ *   1. Positional: `.get(a, b, c)` against a query using `?` placeholders.
+ *   2. Named: `.run({ id, role, ... })` against a query using `@name`
+ *      placeholders (used by the seed script's bulk inserts).
+ * This lets every existing call site keep its exact query string and
+ * argument shape — the only required change is adding `await`.
+ */
+function toPositional(query: string, args: unknown[]): { text: string; values: unknown[] } {
+  if (args.length === 1 && args[0] !== null && typeof args[0] === "object" && !Array.isArray(args[0])) {
+    const named = args[0] as Record<string, unknown>;
+    const values: unknown[] = [];
+    const text = query.replace(/@([a-zA-Z_][a-zA-Z0-9_]*)/g, (_match, name: string) => {
+      values.push(named[name]);
+      return `$${values.length}`;
+    });
+    return { text, values };
+  }
+  let i = 0;
+  const text = query.replace(/\?/g, () => `$${++i}`);
+  return { text, values: args };
+}
+
+export interface PreparedStatement<T = Record<string, unknown>> {
+  get(...args: unknown[]): Promise<T | undefined>;
+  all(...args: unknown[]): Promise<T[]>;
+  run(...args: unknown[]): Promise<void>;
+}
+
+export interface DbLike {
+  prepare<T = Record<string, unknown>>(query: string): PreparedStatement<T>;
+  /**
+   * better-sqlite3-shaped transaction API: `db.transaction(fn)` returns a
+   * callable that, when invoked, runs `fn` with a transaction-scoped
+   * `DbLike` (so queries inside `fn` MUST use the `tx` argument passed to
+   * it, not the outer `db`) inside a single Postgres `BEGIN`/`COMMIT`. If
+   * `fn` throws, postgres.js rolls the transaction back automatically.
+   */
+  transaction<T>(fn: (tx: DbLike) => Promise<T>): () => Promise<T>;
+}
+
+function wrap(client: postgres.Sql): DbLike {
+  return {
+    prepare<T>(query: string): PreparedStatement<T> {
+      return {
+        async get(...args: unknown[]) {
+          await ensureSchema(client);
+          const { text, values } = toPositional(query, args);
+          const rows = await client.unsafe(text, values as never[]);
+          return rows[0] as T | undefined;
+        },
+        async all(...args: unknown[]) {
+          await ensureSchema(client);
+          const { text, values } = toPositional(query, args);
+          const rows = await client.unsafe(text, values as never[]);
+          return rows as unknown as T[];
+        },
+        async run(...args: unknown[]) {
+          await ensureSchema(client);
+          const { text, values } = toPositional(query, args);
+          await client.unsafe(text, values as never[]);
+        },
+      };
+    },
+    transaction<T>(fn: (tx: DbLike) => Promise<T>) {
+      return async () => {
+        await ensureSchema(client);
+        return client.begin(async (txSql) => fn(wrap(txSql as unknown as postgres.Sql))) as Promise<T>;
+      };
+    },
+  };
+}
+
+export function getDb(): DbLike {
+  return wrap(sqlClient());
 }
 
 export function newId(prefix: string): string {

@@ -26,12 +26,90 @@ Every entity from spec Section 9 exists with the exact field names specified:
 `dm_messages`, `notifications`, `referrals`, `survey_responses`,
 `export_audit_log`, `broadcasts`, `content_lessons_meta`.
 
-**Engine note:** this runs on SQLite (`better-sqlite3`) instead of
-Supabase/Postgres, because no Supabase project credentials exist in this
-environment. The schema was written to be a literal 1:1 match to the spec's
-Postgres model (same table/field names, same constraints expressed as CHECK)
-so swapping the client in `src/lib/db.ts` for a Postgres/Supabase client is a
-drop-in migration, not a redesign.
+## 🚧 IN PROGRESS — Postgres migration (started this pass, not finished)
+
+`better-sqlite3` is a native Node addon and failed to load on a contributor's
+Windows machine (`Cannot find module '...\better_sqlite3.node'`), 500-ing
+every write endpoint. That risk repeats on any serverless deploy target, so
+rather than patch around it we're migrating the DB client to PostgreSQL —
+using the `postgres` npm package (a pure-JS client, zero native deps) — for
+real, per the plan already noted in the schema header.
+
+**Done so far:**
+- Installed and started a real local PostgreSQL 17 server in this sandbox
+  (`sudo apt-get install postgresql`), created a `sherise` database. Verified
+  reachable and the exact connection string is documented in `.env.example`
+  / README "Database setup" below.
+- `src/lib/schema.sql` rewritten fully to Postgres dialect: `TIMESTAMPTZ`
+  columns with `NOW()` defaults instead of SQLite's `TEXT`/`datetime('now')`;
+  `JSONB` for `survey_responses.answers` instead of `TEXT`; added a
+  `UNIQUE (user_id, code)` constraint on `medals` (needed for the
+  `ON CONFLICT` idempotent-award pattern). Verified this loads cleanly
+  against a live Postgres 17 instance with `sql.unsafe(schema)` — all 22
+  tables and indexes created with no errors.
+- `package.json`: removed `better-sqlite3` / `@types/better-sqlite3`,
+  installed `postgres` (postgres.js v3).
+- `src/lib/db.ts` rewritten from scratch around `postgres.js`. It exposes the
+  **same `getDb()` / `.prepare(sql).get()/.all()/.run()` / `newId()` shape**
+  the other ~40 files already call, specifically so most callers only need
+  `await` added — not a full query rewrite. Internally it:
+  - Converts `?`-positional and `@name`-named placeholders (both styles are
+    used across the codebase) to postgres.js's `$1, $2...` style.
+  - Registers custom `bigint`/`numeric` type parsers that coerce Postgres's
+    `COUNT(*)` (`bigint`) and `AVG(...)` (`numeric`) results to plain JS
+    `number` — verified against a live query — since every count/avg in this
+    codebase fits safely in a `number` and the postgres.js defaults would
+    otherwise return a raw string or a `BigInt` (which breaks
+    `JSON.stringify`).
+  - Provides a `db.transaction(async (tx) => {...})` API backed by
+    postgres.js's `sql.begin()`, matching better-sqlite3's
+    `db.transaction(fn)` shape closely enough that only `fn` needs to become
+    async and its queries need `await`.
+  - Lazily loads `schema.sql` into the target database on first query
+    (mirrors the old SQLite `db.exec(schema)` behavior) via `sql.unsafe()`'s
+    multi-statement "simple query" mode.
+- `src/lib/access.ts`'s `withExportAudit()` converted to this async
+  transaction API and its one call site
+  (`src/app/api/admin/exports/route.ts`) updated to `await` it and use the
+  transaction-scoped `db` handle it's given.
+
+**NOT done yet — the app will not build/run until this is finished:**
+- The other ~37 files that call `db.prepare(...).get()/.all()/.run()`
+  (all `src/app/api/**/route.ts` files, `src/lib/auth.ts`, `src/lib/seed.ts`,
+  and `src/app/api/lessons/[id]/complete/route.ts`'s `db.transaction()`
+  block) still call these methods **without `await`**, and their TypeScript
+  return-type casts (e.g. `db.prepare(...).get(...) as {...}`) now need to
+  cast a `Promise<...>` instead of the row shape directly — `npx tsc
+  --noEmit` currently reports ~30 type errors of exactly this shape. This is
+  mechanical but has NOT been done file-by-file yet.
+- SQL-dialect fixes not yet applied: `datetime('now', ...)` → `NOW()` /
+  `INTERVAL` (14 call sites across 12 files); `INSERT OR IGNORE` →
+  `ON CONFLICT (...) DO NOTHING` (4 call sites, needs the new
+  `UNIQUE(user_id, code)` constraint on `medals`); a string-based date-bucket
+  comparison in `src/app/api/notifications/route.ts` that assumes
+  `created_at` is a raw string (it'll come back as a `Date` from Postgres);
+  two N+1 nested-query loops (`admin/participants/route.ts`,
+  `posts/route.ts`) that need `Promise.all`/restructuring once their inner
+  queries become async.
+- `src/lib/seed.ts` not yet converted to the async client, and does not yet
+  have the fixed/stable demo participant credentials called for below.
+- Schema not yet loaded into the live DB via the app itself (it was loaded
+  manually with a throwaway script to *validate* the schema, then dropped
+  again) — re-seeding, and re-running the PR #1 curl verification suite
+  against Postgres, are both still outstanding.
+- **`npm run build` will currently fail** until the remaining ~37 files are
+  converted — do not assume this is deployable yet.
+
+If you're picking this up: convert one file at a time, add `await` at every
+`.get()/.all()/.run()` call and every `db.transaction(...)` invocation,
+re-run `npx tsc --noEmit` after each file to confirm the error count is
+dropping, then re-seed and re-run the curl suite once all ~37 are done.
+
+**Historical note (superseded by the above):** this previously ran on SQLite
+(`better-sqlite3`) as a stand-in for Supabase/Postgres, because no Supabase
+project credentials existed in this environment. The schema was written to
+be a literal 1:1 match to the spec's Postgres model specifically so this
+swap wouldn't require a redesign — which the work above is now proving out.
 
 ### Access control (`src/lib/access.ts`)
 SQLite has no native Row Level Security, so every rule from spec Section 9 is

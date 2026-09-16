@@ -58,19 +58,26 @@ export function toPublicUser<T extends { last_name?: unknown }>(u: T): Omit<T, "
 /**
  * Transactional export-audit-log write. Per spec: "if the audit write fails,
  * the export must fail too." We wrap the caller-supplied read in the same
- * better-sqlite3 transaction as the audit insert so a failure rolls back
- * cleanly (better-sqlite3 transactions are synchronous).
+ * Postgres transaction as the audit insert (via `db.transaction()`, backed
+ * by postgres.js's `sql.begin()`) so a failure rolls back cleanly. `read` is
+ * async and MUST use the transaction-scoped `tx` handle it's given, not the
+ * outer `getDb()` result, so both statements run on the same connection.
  */
-export function withExportAudit<T>(adminId: string, what: string, purpose: string, read: () => T): T {
+export async function withExportAudit<T>(
+  adminId: string,
+  what: string,
+  purpose: string,
+  read: (tx: ReturnType<typeof getDb>) => Promise<T>
+): Promise<T> {
   if (!purpose || !purpose.trim()) {
     throw new Error("EXPORT_PURPOSE_REQUIRED");
   }
   const db = getDb();
-  const tx = db.transaction(() => {
-    db.prepare(
+  const tx = db.transaction(async (t) => {
+    await t.prepare(
       `INSERT INTO export_audit_log (id, admin_id, what, purpose) VALUES (?, ?, ?, ?)`
     ).run(newId("exp"), adminId, what, purpose.trim());
-    return read();
+    return read(t);
   });
   return tx();
 }

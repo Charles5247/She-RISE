@@ -1,4 +1,3 @@
-import { getDb } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import { withExportAudit } from "@/lib/access";
 
@@ -19,8 +18,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const data = withExportAudit(user.id, reportId, purpose, () => {
-      const db = getDb();
+    const data = await withExportAudit(user.id, reportId, purpose, async (db) => {
       switch (reportId) {
         case "reach_retention": {
           return db.prepare(`SELECT lga, COUNT(*) as participants, AVG(streak_count) as avg_streak FROM users WHERE role = 'participant' GROUP BY lga`).all();

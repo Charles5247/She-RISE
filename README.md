@@ -37,11 +37,20 @@ separate migration command is required — but you can also load it explicitly:
 psql "$DATABASE_URL" -f src/lib/schema.sql
 ```
 
-For **Supabase**: create a project, copy its connection string (Project
-Settings → Database → Connection string → URI, using the pooled/`pgbouncer`
-port for serverless deploys) into `DATABASE_URL`, then either let the app
-auto-load the schema on first request or run
-`psql "$DATABASE_URL" -f src/lib/schema.sql` yourself.
+For **Supabase**: create a project, copy its connection string from Project
+Settings → Database → Connection string → URI, and paste it as `DATABASE_URL`
+in a root-level `.env.local` file. The server also accepts `SUPABASE_DB_URL`,
+`POSTGRES_URL`, and the public `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+values. Use the Transaction pooler URI (port `6543`) for serverless deploys;
+the app automatically disables prepared statements for that URI. You can start
+from [`.env.example`](./.env.example). Then either let the app auto-load the
+schema on first request or run `psql "$DATABASE_URL" -f src/lib/schema.sql`
+yourself.
+
+The application now supports Supabase as the app database and client config,
+while keeping the existing server-side cookie/session auth and Postgres query
+layer. The browser and server clients are available via `src/lib/supabase.ts`.
+Never expose a `service_role` or secret key through a `NEXT_PUBLIC_*` variable.
 
 ```bash
 npm run dev
@@ -54,12 +63,12 @@ Open http://localhost:3000. Demo data seeds automatically on first request.
 All seeded on first request against whatever database `DATABASE_URL` points
 to. Passwords are for local/demo use only — rotate before any real deploy.
 
-| Role | Identifier | Password | Sign in at |
-|---|---|---|---|
-| Admin | `admin@sherise.org` | `password123` | `/admin/login` |
-| Sponsor | `sponsor@bluesapphire.ng` | `password123` | `/admin/login` |
-| Trainer | any seeded trainer email, e.g. `titilayo@sherise.org` | `password123` | `/admin/login` |
-| Participant | `08100000001` (fixed/stable — hardcoded in `src/lib/seed.ts`, survives reseeds) | `password123` | `/login` |
+| Role        | Identifier                                                                      | Password      | Sign in at     |
+| ----------- | ------------------------------------------------------------------------------- | ------------- | -------------- |
+| Admin       | `admin@sherise.org`                                                             | `password123` | `/admin/login` |
+| Sponsor     | `sponsor@bluesapphire.ng`                                                       | `password123` | `/admin/login` |
+| Trainer     | any seeded trainer email, e.g. `titilayo@sherise.org`                           | `password123` | `/admin/login` |
+| Participant | `08100000001` (fixed/stable — hardcoded in `src/lib/seed.ts`, survives reseeds) | `password123` | `/login`       |
 
 ## Deploying the two surfaces separately
 

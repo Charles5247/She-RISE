@@ -1,9 +1,10 @@
 import { NextRequest } from "next/server";
 import { getDb, newId } from "@/lib/db";
 import { smsProvider, generateOtp } from "@/lib/sms";
+import { withErrorHandling } from "@/lib/apiError";
 
 // POST /api/auth/resend-otp — 24-second resend timer enforced client-side (screen 04)
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandling(async (req: NextRequest) => {
   const { identifier } = (await req.json().catch(() => ({}))) as { identifier?: string };
   if (!identifier) return Response.json({ code: "BAD_REQUEST", message: "Missing identifier." }, { status: 400 });
 
@@ -16,4 +17,4 @@ export async function POST(req: NextRequest) {
   await smsProvider.sendOtp(identifier, code);
 
   return Response.json({ ok: true, devOtp: process.env.NODE_ENV !== "production" ? code : undefined });
-}
+});

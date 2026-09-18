@@ -1,12 +1,13 @@
 import { NextRequest } from "next/server";
 import { getDb, newId } from "@/lib/db";
 import { smsProvider, generateOtp } from "@/lib/sms";
+import { withErrorHandling } from "@/lib/apiError";
 
 // POST /api/auth/forgot-password — screen 08.
 // Per principle 2 / spec 6.8: this flow must NEVER mention program history.
 // The reassurance copy lives in the UI; this endpoint only ever deals with
 // identifier + reset code, nothing case-related.
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandling(async (req: NextRequest) => {
   const { identifier } = (await req.json().catch(() => ({}))) as { identifier?: string };
   if (!identifier) return Response.json({ code: "BAD_REQUEST", message: "Enter your phone or email." }, { status: 400 });
 
@@ -25,4 +26,4 @@ export async function POST(req: NextRequest) {
     return Response.json({ ok: true, devOtp: process.env.NODE_ENV !== "production" ? code : undefined });
   }
   return Response.json({ ok: true });
-}
+});

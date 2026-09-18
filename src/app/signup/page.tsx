@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { postJson } from "@/lib/apiClient";
 
 // Screen 03 — Sign up. Full onboarding flow (screens 01-08) is wired to the
 // API routes under /api/auth/*; this is the first working screen. See
@@ -17,19 +18,18 @@ export default function SignupPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const res = await fetch("/api/auth/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ identifier, password, acceptedTerms: accepted }),
+    const result = await postJson<{ devOtp?: string }>("/api/auth/signup", {
+      identifier,
+      password,
+      acceptedTerms: accepted,
     });
-    const data = await res.json();
     setLoading(false);
-    if (!res.ok) {
-      setError(data.message || "Something went wrong.");
+    if (!result.ok) {
+      setError(result.message);
       return;
     }
     sessionStorage.setItem("sherise_pending_identifier", identifier);
-    if (data.devOtp) sessionStorage.setItem("sherise_dev_otp", data.devOtp);
+    if (result.data?.devOtp) sessionStorage.setItem("sherise_dev_otp", result.data.devOtp);
     router.push("/verify");
   }
 

@@ -2,9 +2,12 @@ import { NextRequest } from "next/server";
 import { getDb, newId } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
 import { smsProvider, generateOtp } from "@/lib/sms";
+import { withErrorHandling } from "@/lib/apiError";
 
 // POST /api/auth/signup — phone or email + password + T&C consent (screen 03)
-export async function POST(req: NextRequest) {
+// Wrapped in withErrorHandling: a DB outage or query error here must return
+// a real JSON 500, not crash with an empty body (see src/lib/apiError.ts).
+export const POST = withErrorHandling(async (req: NextRequest) => {
   const body = await req.json().catch(() => null);
   if (!body) return Response.json({ code: "BAD_REQUEST", message: "Invalid body." }, { status: 400 });
 
@@ -52,4 +55,4 @@ export async function POST(req: NextRequest) {
   await smsProvider.sendOtp(identifier, code);
 
   return Response.json({ ok: true, userId, identifier, devOtp: process.env.NODE_ENV !== "production" ? code : undefined });
-}
+});

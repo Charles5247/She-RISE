@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
+import { withErrorHandling } from "@/lib/apiError";
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandling(async (req: NextRequest) => {
   const { identifier, code, newPassword } = (await req.json().catch(() => ({}))) as {
     identifier?: string;
     code?: string;
@@ -26,4 +27,4 @@ export async function POST(req: NextRequest) {
     identifier
   );
   return Response.json({ ok: true });
-}
+});

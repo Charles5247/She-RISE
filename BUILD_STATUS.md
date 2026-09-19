@@ -281,20 +281,37 @@ comments with trainer badge).
 screens included (verified after each screen was added, not just at the
 end).
 
-**Still remaining** (~22 screens): `/notifications`, `/circles`,
-`/pathways` (+ `/pathways/[id]`), `/lessons/[id]` (+ lesson-complete
-celebration), `/progress`, `/milestones/[id]`, `/profile` (+ edit-profile),
-`/settings`, trainer-chat, help-safety, plus all 9 admin screens
+### Item 3 progress — all remaining participant screens now built
+
+All participant-app screens from the design inventory are now real pages:
+`/notifications` (screen 12, grouped by day, mark-read), `/circles`
+(screen 13, LGA filter chips, join/leave), `/pathways` (screen 14, current
+pathway hero + module list), `/pathways/[id]` (full module list per
+pathway), `/lessons/[id]` (screens 15 & 16 combined — video placeholder +
+XP bar + steps, and an in-place lesson-complete celebration view with gold
+medal + XP/streak/total-XP tri-card once marked done), `/progress`
+(screen 17, XP ring, medals grid, income sparkline, milestone list),
+`/milestones/[id]` (screen 18, amount + verifier + story), `/profile`
+(screen 19) + `/profile/edit` (screen 20), `/settings` (screen 21, wifi-only/
+panic-hide toggles, log-out), `/trainer-chat/[trainerId]` (screen 22, DM
+thread), `/help-safety` (screen 23, emergency card + panic-hide explainer +
+trainer list).
+
+`npx tsc --noEmit`, `npm run lint`, and `npm run build` all pass with the
+full participant surface included.
+
+**Still remaining**: the preloader/welcome-carousel onboarding screens
+(01-02, low priority — cosmetic first-load only), and all 9 admin screens
 (`/admin/overview`, `/admin/participants` (+ detail), `/admin/referrals`,
 `/admin/perception`, `/admin/content`, `/admin/reports`, `/admin/broadcasts`,
-`/admin/trainers`) and the preloader/welcome-carousel onboarding screens
-(01-02). These need to be built the same way: against the already-complete
-API layer (no API changes needed) and the shared component kit above. The
-admin screens in particular should reuse `<AdminShell activeNav="...">` and
-read the still-unread design-reference JSX for `C2AdminParticipantDetail`
-(~line 3628), `C2AdminReferrals` (~3724), `C2AdminContent` (~3813),
-`C2AdminReports` (~3860), `C2AdminBroadcasts` (~3894), `C2AdminTrainers`
-(~3945) in the design reference HTML before building each one.
+`/admin/trainers`). These need to be built the same way: against the
+already-complete API layer (no API changes needed) and the shared component
+kit above. The admin screens in particular should reuse
+`<AdminShell activeNav="...">` and read the still-unread design-reference
+JSX for `C2AdminParticipantDetail` (~line 3628), `C2AdminReferrals`
+(~3724), `C2AdminContent` (~3813), `C2AdminReports` (~3860),
+`C2AdminBroadcasts` (~3894), `C2AdminTrainers` (~3945) in the design
+reference HTML before building each one.
 - **Panic-hide UI:** the PIN-verification API (`/api/me/verify-pin`) and the
   `panic_hide_enabled` (default true) field exist; the actual Calculator
   disguise screen, the 2-second long-press gesture, and the tab-title/favicon

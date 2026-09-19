@@ -252,15 +252,49 @@ drop-off reasons, 340 survey responses (baseline + midline) with the exact
 
 ## 🟡 Partially built
 
-- **UI screens:** `/`, `/signup`, `/login`, and `/admin/login` have real
-  pages now (auth is fully wired end-to-end, including error handling — see
-  the "Robustness fix" note under Auth above). The other 32
-  participant/admin screens (Sections 6–7 of the spec) need to be built as
-  React components against
-  `docs/design-handoff/design-tokens.json` and the CSS tokens already wired
-  into `src/app/globals.css` (`--c-plum`, `--c-magenta`, `--c-gold`, etc.) —
-  every color/type/spacing/radius token from the spec is live and ready to
-  use, just not yet composed into all 35 screens.
+### Item 3 progress — shared component kit + first participant screens
+
+A shared component kit now exists under `src/components/` (`Avatar`,
+`Icon.tsx` — full custom SVG set, `Photo`, `FormField`, `PButton`, `Ring`,
+`Spark`, `TabBar`, `AuthShell`, `AdminShell`, `PostCard`, and
+`Primitives.tsx` — `ListRow`/`Chip`/`Toast`/`Divider`/`EmptyState`/
+`SectionHeader`/`Spinner`, plus `States.tsx` — `LoadingState`/`ErrorState`/
+`OfflineBanner`/`useOnlineStatus`), reimplemented from the design reference
+(`docs/design-handoff/SheRISE Bold - Design Reference.html`) as real
+TypeScript components wired to the CSS custom properties in `globals.css`.
+`src/lib/apiClient.ts` now also exports `getJson`/`patchJson`/`deleteJson`
+alongside the existing `postJson`, and `src/lib/useSessionUser.ts` is a
+shared client hook for reading the logged-in user and redirecting to the
+right login page on 401.
+
+**Newly built real screens** (in addition to `/`, `/signup`, `/login`,
+`/admin/login` from before): `/verify` (OTP, screen 04, handles both the
+signup and forgot-password reset flows via `?purpose=reset`),
+`/forgot-password` (screen 08), `/reset-password`, `/onboarding/profile`
+(create-profile, screen 05), `/onboarding/preferences` (language + skill
+picker, screen 06), `/feed` (screen 09, story bar + milestone hero cards +
+empty state), `/composer` (screen 10, milestone tagging + cross-post
+consent toggles, off by default), `/posts/[id]` (screen 11, reactions +
+comments with trainer badge).
+
+`npx tsc --noEmit`, `npm run lint`, and `npm run build` all pass with these
+screens included (verified after each screen was added, not just at the
+end).
+
+**Still remaining** (~22 screens): `/notifications`, `/circles`,
+`/pathways` (+ `/pathways/[id]`), `/lessons/[id]` (+ lesson-complete
+celebration), `/progress`, `/milestones/[id]`, `/profile` (+ edit-profile),
+`/settings`, trainer-chat, help-safety, plus all 9 admin screens
+(`/admin/overview`, `/admin/participants` (+ detail), `/admin/referrals`,
+`/admin/perception`, `/admin/content`, `/admin/reports`, `/admin/broadcasts`,
+`/admin/trainers`) and the preloader/welcome-carousel onboarding screens
+(01-02). These need to be built the same way: against the already-complete
+API layer (no API changes needed) and the shared component kit above. The
+admin screens in particular should reuse `<AdminShell activeNav="...">` and
+read the still-unread design-reference JSX for `C2AdminParticipantDetail`
+(~line 3628), `C2AdminReferrals` (~3724), `C2AdminContent` (~3813),
+`C2AdminReports` (~3860), `C2AdminBroadcasts` (~3894), `C2AdminTrainers`
+(~3945) in the design reference HTML before building each one.
 - **Panic-hide UI:** the PIN-verification API (`/api/me/verify-pin`) and the
   `panic_hide_enabled` (default true) field exist; the actual Calculator
   disguise screen, the 2-second long-press gesture, and the tab-title/favicon

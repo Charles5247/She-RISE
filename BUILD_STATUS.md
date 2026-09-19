@@ -300,18 +300,36 @@ trainer list).
 `npx tsc --noEmit`, `npm run lint`, and `npm run build` all pass with the
 full participant surface included.
 
-**Still remaining**: the preloader/welcome-carousel onboarding screens
-(01-02, low priority — cosmetic first-load only), and all 9 admin screens
-(`/admin/overview`, `/admin/participants` (+ detail), `/admin/referrals`,
-`/admin/perception`, `/admin/content`, `/admin/reports`, `/admin/broadcasts`,
-`/admin/trainers`). These need to be built the same way: against the
-already-complete API layer (no API changes needed) and the shared component
-kit above. The admin screens in particular should reuse
-`<AdminShell activeNav="...">` and read the still-unread design-reference
-JSX for `C2AdminParticipantDetail` (~line 3628), `C2AdminReferrals`
-(~3724), `C2AdminContent` (~3813), `C2AdminReports` (~3860),
-`C2AdminBroadcasts` (~3894), `C2AdminTrainers` (~3945) in the design
-reference HTML before building each one.
+### Item 3 progress — all 9 admin screens now built
+
+All 9 admin desktop screens from the design inventory are now real pages,
+each wired to the already-complete API layer (zero API changes) and reusing
+`<AdminShell activeNav="...">`: `/admin/overview` (screen 25, KPI cards +
+Priorities + Momentum + LGA breakdown), `/admin/participants` (screen 26,
+status filter tabs + LGA/skill dropdowns + 8-col table), `/admin/participants/[id]`
+(screen 27, identity card + private trainer notes + 4 outcome KPIs + income
+sparkline + timeline), `/admin/referrals` (screen 28, 4-step funnel with
+drop-off deltas + drop-off reason cards + top-LGA conversion + Signal card),
+`/admin/content` (screen 29, pathway filter chips + 3-col lesson card grid),
+`/admin/reports` (screen 30, standard reports list with an audited-download
+flow that requires a documented purpose before calling
+`POST /api/admin/exports`, plus a custom export field-picker builder),
+`/admin/broadcasts` (screen 31, compose form + sent-recently panel with
+reach/open-rate, wired to `GET`/`POST /api/admin/broadcasts`),
+`/admin/trainers` (screen 32, trainer table + sponsor cards), and
+`/admin/perception` (the M&E Section-8 community-perception dataset screen —
+not present in the static design reference, so built to match the same
+visual language as the other 8, including the admin-only `dataQuality`
+enumerator-monitoring block).
+
+`npx tsc --noEmit`, `npm run lint`, and `npm run build` all pass with the
+full admin surface included. All 9 admin routes were also smoke-tested live
+against the seeded Postgres database (admin login + every GET endpoint +
+the export and broadcast POST endpoints all returned correct data).
+
+**Still remaining**: only the preloader/welcome-carousel onboarding screens
+(01-02, low priority — cosmetic first-load only) are left to complete
+Item 3.
 - **Panic-hide UI:** the PIN-verification API (`/api/me/verify-pin`) and the
   `panic_hide_enabled` (default true) field exist; the actual Calculator
   disguise screen, the 2-second long-press gesture, and the tab-title/favicon

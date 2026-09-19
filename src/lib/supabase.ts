@@ -29,8 +29,20 @@ export async function getSupabaseServerClient() {
     );
   }
 
+  const cookieStore = await cookies();
   return createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: async () => cookies(),
+    cookies: {
+      getAll: () => cookieStore.getAll(),
+      setAll: (cookiesToSet) => {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+        } catch {
+          // Called from a Server Component where cookies can't be set — safe
+          // to ignore as long as middleware handles session refresh (it does
+          // not currently use Supabase auth, so this is a no-op today).
+        }
+      },
+    },
   });
 }
 

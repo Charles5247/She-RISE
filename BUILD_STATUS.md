@@ -12,9 +12,10 @@ this pass prioritized building **the entire backend/data/business-logic layer
 for real and end-to-end**, over hand-crafting all 35 pixel-perfect screens.
 Every rule in the spec that is about *behavior, data, or access control* is
 implemented and testable right now via `curl`. The *screens* are partially
-built: auth is wired end-to-end with one real page (`/signup`); the other 34
-screens have their APIs fully working but need their UI built against the
-design tokens and the `docs/design-handoff/` reference file.
+built: auth is wired end-to-end with three real pages (`/signup`, `/login`,
+`/admin/login`); the other 32 screens have their APIs fully working but
+need their UI built against the design tokens and the
+`docs/design-handoff/` reference file.
 
 ## ✅ Fully implemented and tested
 
@@ -136,13 +137,63 @@ Cookie-based sessions (httpOnly, scrypt-hashed passwords, hashed session
 tokens), OTP signup/verify/resend, forgot/reset password, profile completion,
 and a separate `/api/admin/login` that rejects `participant`-role accounts
 even with correct credentials (staff/trainer/sponsor only). Full flow tested
-end-to-end with curl: signup → OTP → session → `/api/auth/me`.
+end-to-end with curl: signup → OTP → session → `/api/auth/me`. Both real
+login pages now exist: `/login` (participant, screen 07) and `/admin/login`
+(staff/trainer/sponsor, screen 24, split-screen "Every rise, on record" /
+"All access is audited" per the design handoff).
+
+**Robustness fix:** every route under `/api/auth/*` and `/api/admin/login`
+is now wrapped in `withErrorHandling()` (`src/lib/apiError.ts`) — if a DB
+call throws for any reason (connection dropped, query error, etc.), the
+route now returns a real `{"code":"SERVER_ERROR",...}` JSON 500 instead of
+crashing with an empty body. Before this fix, an empty-body crash made the
+frontend's `res.json()` throw its own unrelated-looking parse error,
+hiding the real problem. The three pages that call these routes (`/signup`,
+`/login`, `/admin/login`) all use the new `postJson()` helper
+(`src/lib/apiClient.ts`), which never lets a bad/empty response body throw
+past the caller — it always resolves to `{ ok, status, data, message }` so
+the UI can show the generic error message instead of an unhandled
+rejection. **Not yet applied** to the other ~27 non-auth routes (posts,
+pathways, admin/participants, etc.) — worth a dedicated follow-up pass,
+since the pattern is a pure catch-all with no behavior change on the
+success path, but it wasn't done here to keep this pass scoped to the
+routes actually being touched.
 
 ### Deployment surface separation (`src/middleware.ts`, `src/lib/domain.ts`)
 Implements the "two domains, one codebase" requirement: set
 `NEXT_PUBLIC_APP_SURFACE=participant` on the sherise.com deployment to 404 all
 `/admin/*` routes; set it to `admin` on sherise-admin.com to redirect
 everything else to `/admin/login`. Unset (local/demo) reaches both.
+
+**Verified: surface separation.** Previously this was only asserted against
+404s from routes that didn't exist yet, which proved nothing. Now that both
+`/login` and `/admin/login` are real pages, `scripts/verify-surface-separation.sh`
+builds the app once, then boots it twice — once per `NEXT_PUBLIC_APP_SURFACE`
+value — and curls a representative path set against each real running
+instance. Actual output from the last run:
+
+```
+[verify] Building app once (shared by both surface runs)...
+[verify] Starting server with NEXT_PUBLIC_APP_SURFACE=participant on :4001 ...
+[verify] participant surface checks:
+  PASS  GET /login (participant) -> 200
+  PASS  GET /admin/login (participant, should 404) -> 404
+  PASS  GET /api/admin/overview (participant, should 404) -> 404
+  PASS  GET / (participant) -> 200
+[verify] Starting server with NEXT_PUBLIC_APP_SURFACE=admin on :4002 ...
+[verify] admin surface checks:
+  PASS  GET /admin/login (admin) -> 200
+  PASS  GET / (admin, should redirect) -> redirected to /admin/login
+  PASS  GET /login (admin, should redirect) -> redirected to /admin/login
+
+[verify] Results: 7 passed, 0 failed.
+```
+
+Run it yourself with `./scripts/verify-surface-separation.sh` (builds the
+app, then serves it on ports 4001/4002 in turn — no extra setup beyond a
+reachable `DATABASE_URL`). Worth wiring into CI as a required check once a
+CI pipeline exists for this repo (none does yet — no `.github/workflows/`
+directory).
 
 ### Cross-post consent & content filter (`src/lib/crosspost.ts`)
 `generateCrosspostCopy()` builds the public caption from **only** the
@@ -201,9 +252,11 @@ drop-off reasons, 340 survey responses (baseline + midline) with the exact
 
 ## 🟡 Partially built
 
-- **UI screens:** only `/`, `/signup`, and the admin login *endpoint* have
-  real pages. The other 32 participant/admin screens (Sections 6–7 of the
-  spec) need to be built as React components against
+- **UI screens:** `/`, `/signup`, `/login`, and `/admin/login` have real
+  pages now (auth is fully wired end-to-end, including error handling — see
+  the "Robustness fix" note under Auth above). The other 32
+  participant/admin screens (Sections 6–7 of the spec) need to be built as
+  React components against
   `docs/design-handoff/design-tokens.json` and the CSS tokens already wired
   into `src/app/globals.css` (`--c-plum`, `--c-magenta`, `--c-gold`, etc.) —
   every color/type/spacing/radius token from the spec is live and ready to

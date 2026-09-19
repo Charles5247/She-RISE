@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
+import { withErrorHandling } from "@/lib/apiError";
 
 // POST /api/auth/complete-profile — screens 05 & 06
 // first_name (public), last_name (private), age, LGA, avatar; then language + skill.
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandling(async (req: NextRequest) => {
   const user = await getSessionUser();
   if (!user) return Response.json({ code: "UNAUTHORIZED", message: "Sign in required." }, { status: 401 });
 
@@ -32,4 +33,4 @@ export async function POST(req: NextRequest) {
   ).run(firstName, lastName || null, age || null, lga, avatarUrl || null, language || null, skillCategory || null, user.id);
 
   return Response.json({ ok: true });
-}
+});

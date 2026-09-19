@@ -1,12 +1,13 @@
 import { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 import { verifyPassword, createSession } from "@/lib/auth";
+import { withErrorHandling } from "@/lib/apiError";
 
 // POST /api/admin/login — screen 24. Split-screen "Every rise, on record" /
 // "All access is audited." Only admin, trainer, and sponsor roles may sign in
 // here — participants are rejected even with correct credentials, since the
 // admin surface is deployed to a separate domain per the user's requirement.
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandling(async (req: NextRequest) => {
   const { identifier, password } = (await req.json().catch(() => ({}))) as { identifier?: string; password?: string };
   if (!identifier || !password) {
     return Response.json({ code: "BAD_REQUEST", message: "Email and password required." }, { status: 400 });
@@ -26,4 +27,4 @@ export async function POST(req: NextRequest) {
 
   await createSession(user.id);
   return Response.json({ ok: true, role: user.role });
-}
+});

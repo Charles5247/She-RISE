@@ -1,9 +1,10 @@
 import { NextRequest } from "next/server";
 import { getDb } from "@/lib/db";
 import { createSession } from "@/lib/auth";
+import { withErrorHandling } from "@/lib/apiError";
 
 // POST /api/auth/verify-otp — screen 04, 6-digit OTP
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandling(async (req: NextRequest) => {
   const body = await req.json().catch(() => null);
   const { identifier, code } = (body || {}) as { identifier?: string; code?: string };
   if (!identifier || !code) {
@@ -35,4 +36,4 @@ export async function POST(req: NextRequest) {
 
   await createSession(user.id);
   return Response.json({ ok: true, onboardingComplete: !!user.onboarding_complete });
-}
+});

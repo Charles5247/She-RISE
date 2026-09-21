@@ -8,6 +8,7 @@ import { PButton } from "@/components/PButton";
 import { LoadingState, ErrorState } from "@/components/States";
 import { useSessionUser } from "@/lib/useSessionUser";
 import { getJson, postJson } from "@/lib/apiClient";
+import { NIGERIA_STATES } from "@/lib/nigeria-locations";
 
 interface Broadcast {
   id: string;
@@ -19,8 +20,6 @@ interface Broadcast {
   sent_at: string;
 }
 
-const LGAS = ["Ondo Central", "Ondo West", "Ondo East", "Akure South", "Owo", "Ile Oluji"];
-
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }).toUpperCase();
 }
@@ -29,6 +28,7 @@ export default function AdminBroadcastsPage() {
   const { user, loading: userLoading } = useSessionUser({ loginPath: "/admin/login" });
   const [broadcasts, setBroadcasts] = useState<Broadcast[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [stateFilter, setStateFilter] = useState("");
   const [audience, setAudience] = useState("all");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -90,16 +90,41 @@ export default function AdminBroadcastsPage() {
               <label className="sr-label" style={{ fontSize: 10, color: "var(--c-gold-deep)", display: "block", marginBottom: 6 }}>
                 AUDIENCE
               </label>
-              <select
-                value={audience}
-                onChange={(e) => setAudience(e.target.value)}
-                style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid var(--c-line)", fontSize: 13 }}
-              >
-                <option value="all">All participants</option>
-                {LGAS.map((l) => (
-                  <option key={l} value={l}>{l}</option>
-                ))}
-              </select>
+              <div style={{ display: "flex", gap: 8 }}>
+                <select
+                  value={stateFilter}
+                  onChange={(e) => {
+                    const nextState = e.target.value;
+                    setStateFilter(nextState);
+                    // The API only matches an exact lga (or skill_category), not a
+                    // whole state — so picking a state narrows the LGA dropdown
+                    // below to that state's real LGAs; it never sends on its own.
+                    setAudience(nextState ? (NIGERIA_STATES.find((s) => s.name === nextState)?.lgas[0] ?? "all") : "all");
+                  }}
+                  style={{ flex: 1, padding: "10px 12px", borderRadius: 6, border: "1px solid var(--c-line)", fontSize: 13 }}
+                >
+                  <option value="">All participants (nationwide)</option>
+                  {NIGERIA_STATES.map((s) => (
+                    <option key={s.name} value={s.name}>{s.name}</option>
+                  ))}
+                </select>
+                {stateFilter && (
+                  <select
+                    value={audience}
+                    onChange={(e) => setAudience(e.target.value)}
+                    style={{ flex: 1, padding: "10px 12px", borderRadius: 6, border: "1px solid var(--c-line)", fontSize: 13 }}
+                  >
+                    {NIGERIA_STATES.find((s) => s.name === stateFilter)?.lgas.map((l) => (
+                      <option key={l} value={l}>{l}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              <div style={{ marginTop: 6, fontSize: 11, color: "var(--c-ink-soft)" }}>
+                {stateFilter
+                  ? `Targeting participants in ${audience}, ${stateFilter}.`
+                  : "Targeting all participants nationwide."}
+              </div>
             </div>
             <FormField label="Title" value={title} onChange={setTitle} placeholder="Week 4 gathering — bring your offcuts" />
             <div>

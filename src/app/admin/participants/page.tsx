@@ -10,6 +10,7 @@ import { FlameIcon } from "@/components/Icon";
 import { LoadingState, ErrorState } from "@/components/States";
 import { useSessionUser } from "@/lib/useSessionUser";
 import { getJson } from "@/lib/apiClient";
+import { ALL_LGAS } from "@/lib/nigeria-locations";
 
 interface Participant {
   id: string;
@@ -37,7 +38,6 @@ const STATUS_TONE: Record<string, { bg: string; fg: string; label: string }> = {
   completed: { bg: "var(--c-magenta)", fg: "#fff", label: "ALUMNA" },
 };
 
-const LGAS = ["Ondo Central", "Ondo West", "Ondo East", "Akure South", "Owo", "Ile Oluji"];
 const SKILLS = ["Tailoring & Fashion", "Catering & Baking", "Soap & Bead Making", "Digital Marketing", "Content Creation"];
 
 export default function AdminParticipantsPage() {
@@ -85,8 +85,11 @@ export default function AdminParticipantsPage() {
         <div style={{ display: "flex", gap: 8 }}>
           <select value={lga} onChange={(e) => setLga(e.target.value)} style={{ padding: "8px 10px", borderRadius: 6, border: "1px solid var(--c-line)", fontSize: 12 }}>
             <option value="">All LGAs</option>
-            {LGAS.map((l) => (
-              <option key={l} value={l}>{l}</option>
+            {ALL_LGAS.map((l, i) => (
+              // Index included in the key: a handful of LGA names legitimately
+              // repeat across different states (e.g. "Nasarawa", "Obi"), so the
+              // name alone isn't a unique React key here.
+              <option key={`${l}-${i}`} value={l}>{l}</option>
             ))}
           </select>
           <select value={skill} onChange={(e) => setSkill(e.target.value)} style={{ padding: "8px 10px", borderRadius: 6, border: "1px solid var(--c-line)", fontSize: 12 }}>

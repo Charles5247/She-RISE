@@ -10,6 +10,7 @@ import { AdminShell } from "@/components/AdminShell";
 import { LoadingState, ErrorState } from "@/components/States";
 import { useSessionUser } from "@/lib/useSessionUser";
 import { getJson } from "@/lib/apiClient";
+import { ALL_LGAS } from "@/lib/nigeria-locations";
 
 interface TallyRow {
   label: string;
@@ -34,8 +35,6 @@ interface PerceptionData {
 const cardBg = "var(--c-dark-card-bg)";
 const border = "1px solid var(--c-dark-border)";
 const soft = "var(--c-dark-text-soft)";
-
-const LGAS = ["Ondo Central", "Ondo West", "Ondo East", "Akure South", "Owo", "Ile Oluji"];
 
 function Bars({ rows, tone = "var(--c-gold)" }: { rows: TallyRow[]; tone?: string }) {
   const max = Math.max(...rows.map((r) => r.count), 1);
@@ -99,8 +98,11 @@ export default function AdminPerceptionPage() {
           </select>
           <select value={lga} onChange={(e) => setLga(e.target.value)} style={{ padding: "8px 10px", borderRadius: 6, border: "1px solid var(--c-line)", fontSize: 12 }}>
             <option value="">All LGAs</option>
-            {LGAS.map((l) => (
-              <option key={l} value={l}>{l}</option>
+            {ALL_LGAS.map((l, i) => (
+              // Index included in the key: a handful of LGA names legitimately
+              // repeat across different states (e.g. "Nasarawa", "Obi"), so the
+              // name alone isn't a unique React key here.
+              <option key={`${l}-${i}`} value={l}>{l}</option>
             ))}
           </select>
         </div>

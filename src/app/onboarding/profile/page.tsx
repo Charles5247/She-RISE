@@ -7,15 +7,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthShell, Avatar, FormField, PButton } from "@/components";
 import { postJson } from "@/lib/apiClient";
-
-const LGAS = ["Ondo Central", "Ondo West", "Ondo East", "Akure South", "Owo", "Ile Oluji"];
+import { ALL_LGAS } from "@/lib/nigeria-locations";
 
 export default function CreateProfilePage() {
   const router = useRouter();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [age, setAge] = useState("");
-  const [lga, setLga] = useState(LGAS[0]);
+  const [lga, setLga] = useState(ALL_LGAS[0]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -80,8 +79,11 @@ export default function CreateProfilePage() {
             className="w-full rounded-lg border px-4 py-3 text-sm"
             style={{ borderColor: "var(--c-line)", color: "var(--c-ink)" }}
           >
-            {LGAS.map((l) => (
-              <option key={l} value={l}>
+            {ALL_LGAS.map((l, i) => (
+              // Index included in the key: a handful of LGA names legitimately
+              // repeat across different states (e.g. "Nasarawa", "Obi"), so the
+              // name alone isn't a unique React key here.
+              <option key={`${l}-${i}`} value={l}>
                 {l}
               </option>
             ))}

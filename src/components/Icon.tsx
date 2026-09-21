@@ -67,30 +67,31 @@ export function HomeIcon({ size, filled, ...p }: IconProps) {
   );
 }
 
-export function BookIcon({ size, ...p }: IconProps) {
+export function BookIcon({ size, filled, ...p }: IconProps) {
   const s = base(size, 24);
   return (
     <svg viewBox="0 0 24 24" fill="none" width={s} height={s} {...p}>
-      <path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2V5zM6 3v18" stroke="currentColor" strokeWidth="1.6" fill="none" />
+      <path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2V5zM6 3v18" stroke="currentColor" strokeWidth="1.6" fill={filled ? "currentColor" : "none"} />
     </svg>
   );
 }
 
-export function ChartIcon({ size, ...p }: IconProps) {
+export function ChartIcon({ size, filled, ...p }: IconProps) {
   const s = base(size, 24);
   return (
     <svg viewBox="0 0 24 24" fill="none" width={s} height={s} {...p}>
-      <path d="M4 20V10M10 20V4M16 20v-8M22 20H2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M4 20V10M10 20V4M16 20v-8M22 20H2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" fill={filled ? "currentColor" : "none"} />
     </svg>
   );
 }
 
-export function UserIcon({ size, ...p }: IconProps) {
+export function UserIcon({ size, filled, ...p }: IconProps) {
   const s = base(size, 24);
+  const f = filled ? "currentColor" : "none";
   return (
     <svg viewBox="0 0 24 24" fill="none" width={s} height={s} {...p}>
-      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M4 21c1-4 4-6 8-6s7 2 8 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.6" fill={f} />
+      <path d="M4 21c1-4 4-6 8-6s7 2 8 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" fill={f} />
     </svg>
   );
 }

@@ -63,12 +63,19 @@ Open http://localhost:3000. Demo data seeds automatically on first request.
 All seeded on first request against whatever database `DATABASE_URL` points
 to. Passwords are for local/demo use only — rotate before any real deploy.
 
-| Role        | Identifier                                                                      | Password      | Sign in at     |
-| ----------- | ------------------------------------------------------------------------------- | ------------- | -------------- |
-| Admin       | `admin@sherise.org`                                                             | `password123` | `/admin/login` |
-| Sponsor     | `sponsor@bluesapphire.ng`                                                       | `password123` | `/admin/login` |
-| Trainer     | any seeded trainer email, e.g. `titilayo@sherise.org`                           | `password123` | `/admin/login` |
-| Participant | `08100000001` (fixed/stable — hardcoded in `src/lib/seed.ts`, survives reseeds) | `password123` | `/login`       |
+The password shown below (`password123`) is only the **default**, used when
+the `SEED_DEMO_PASSWORD` environment variable is unset (which is the case for
+a fresh local `npm run dev`). On any shared/staging deployment where
+`SEED_DEMO_PASSWORD` has been set to something else, every seeded account's
+real password is whatever that variable was set to at seed time — not
+necessarily what's printed here.
+
+| Role        | Identifier                                                                      | Password (default) | Sign in at     |
+| ----------- | ------------------------------------------------------------------------------- | ------------------- | -------------- |
+| Admin       | `admin@sherise.org`                                                             | `password123`       | `/admin/login` |
+| Sponsor     | `sponsor@bluesapphire.ng`                                                       | `password123`       | `/admin/login` |
+| Trainer     | any seeded trainer email, e.g. `titilayo@sherise.org`                           | `password123`       | `/admin/login` |
+| Participant | `08100000001` (fixed/stable — hardcoded in `src/lib/seed.ts`, survives reseeds) | `password123`       | `/login`       |
 
 ## Deploying the two surfaces separately
 

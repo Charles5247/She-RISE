@@ -16,7 +16,10 @@ const LAST_NAMES = ["Adebayo", "Okafor", "Bello", "Ogunleye", "Eze", "Adeyemi", 
 // contributor never has to "inspect /api/admin/participants to find one."
 // Hardcoded here (not randomized) so it survives every reseed.
 export const DEMO_PARTICIPANT_PHONE = "08100000001";
-export const DEMO_PARTICIPANT_PASSWORD = "password123";
+// Overridable via SEED_DEMO_PASSWORD so a shared/staging deployment isn't
+// stuck with the same publicly-documented default forever; local dev with
+// no env var set keeps working exactly as before.
+export const DEMO_PARTICIPANT_PASSWORD = process.env.SEED_DEMO_PASSWORD || "password123";
 
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -42,7 +45,7 @@ export async function seedIfEmpty() {
   `);
 
   const pinHash = hashPassword("1234");
-  const passHash = hashPassword("password123");
+  const passHash = hashPassword(DEMO_PARTICIPANT_PASSWORD);
 
   // --- Admin ---
   const adminId = newId("usr");
@@ -148,9 +151,10 @@ export async function seedIfEmpty() {
 
   // Fixed demo participant FIRST, so she gets a predictable id, a
   // guaranteed-populated pathway, and shows up in feeds/lists just like any
-  // other seeded participant. Login: phone 08100000001 / password123
-  // (see README.md "Demo credentials"). Hardcoded (not random) intentionally
-  // so this login survives every reseed.
+  // other seeded participant. Login: phone 08100000001 / DEMO_PARTICIPANT_PASSWORD
+  // (defaults to "password123" unless SEED_DEMO_PASSWORD is set — see
+  // README.md "Demo credentials"). Hardcoded (not random) intentionally so
+  // this login survives every reseed.
   const demoParticipantId = newId("usr");
   const demoCat = pathwaySpecs[0].cat; // Tailoring & Fashion — matches the first trainer's specialty
   await insertUser.run({

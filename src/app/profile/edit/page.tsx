@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { Avatar, ChevronLeftIcon, FormField, PButton } from "@/components";
 import { LoadingState, ErrorState } from "@/components/States";
 import { getJson, patchJson } from "@/lib/apiClient";
-
-const LGAS = ["Ondo Central", "Ondo West", "Ondo East", "Akure South", "Owo", "Ile Oluji"];
+import { ALL_LGAS } from "@/lib/nigeria-locations";
 
 interface Profile {
   firstName: string;
@@ -20,7 +19,7 @@ export default function EditProfilePage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [bio, setBio] = useState("");
-  const [lga, setLga] = useState(LGAS[0]);
+  const [lga, setLga] = useState(ALL_LGAS[0]);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -35,7 +34,7 @@ export default function EditProfilePage() {
     setFirstName(res.data.profile.firstName);
     setLastName(res.data.profile.lastName || "");
     setBio(res.data.profile.bio || "");
-    setLga(res.data.profile.lga || LGAS[0]);
+    setLga(res.data.profile.lga || ALL_LGAS[0]);
     setLoaded(true);
   }, []);
 
@@ -113,8 +112,11 @@ export default function EditProfilePage() {
             className="w-full rounded-lg border px-4 py-3 text-sm"
             style={{ borderColor: "var(--c-line)", color: "var(--c-ink)" }}
           >
-            {LGAS.map((l) => (
-              <option key={l} value={l}>
+            {ALL_LGAS.map((l, i) => (
+              // Index included in the key: a handful of LGA names legitimately
+              // repeat across different states (e.g. "Nasarawa", "Obi"), so the
+              // name alone isn't a unique React key here.
+              <option key={`${l}-${i}`} value={l}>
                 {l}
               </option>
             ))}

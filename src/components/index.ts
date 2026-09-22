@@ -5,6 +5,7 @@ export * from "./Avatar";
 export * from "./Photo";
 export * from "./FormField";
 export * from "./PButton";
+export * from "./ProfilePhotoPicker";
 export * from "./Ring";
 export * from "./Spark";
 export * from "./TabBar";

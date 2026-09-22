@@ -1,17 +1,19 @@
 "use client";
-// Screen 20 — Edit profile. Avatar w/ camera, FormField x4.
-import { useCallback, useEffect, useState } from "react";
+
+// Screen 20 - Edit profile. Avatar, state/LGA, and profile fields.
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Avatar, ChevronLeftIcon, FormField, PButton } from "@/components";
+import { ChevronLeftIcon, FormField, PButton, ProfilePhotoPicker } from "@/components";
 import { LoadingState, ErrorState } from "@/components/States";
 import { getJson, patchJson } from "@/lib/apiClient";
-import { ALL_LGAS } from "@/lib/nigeria-locations";
+import { findStateForLga, NIGERIA_STATES } from "@/lib/nigeria-locations";
 
 interface Profile {
   firstName: string;
   lastName: string | null;
   bio: string | null;
   lga: string | null;
+  avatarUrl: string | null;
 }
 
 export default function EditProfilePage() {
@@ -19,10 +21,14 @@ export default function EditProfilePage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [bio, setBio] = useState("");
-  const [lga, setLga] = useState(ALL_LGAS[0]);
+  const [stateName, setStateName] = useState("");
+  const [lga, setLga] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const selectedState = useMemo(() => NIGERIA_STATES.find((state) => state.name === stateName), [stateName]);
 
   const load = useCallback(async () => {
     setError(null);
@@ -31,10 +37,15 @@ export default function EditProfilePage() {
       setError(res.message);
       return;
     }
-    setFirstName(res.data.profile.firstName);
-    setLastName(res.data.profile.lastName || "");
-    setBio(res.data.profile.bio || "");
-    setLga(res.data.profile.lga || ALL_LGAS[0]);
+
+    const profile = res.data.profile;
+    const matchingState = findStateForLga(profile.lga);
+    setFirstName(profile.firstName);
+    setLastName(profile.lastName || "");
+    setBio(profile.bio || "");
+    setStateName(matchingState?.name || "");
+    setLga(profile.lga || "");
+    setAvatarUrl(profile.avatarUrl);
     setLoaded(true);
   }, []);
 
@@ -44,9 +55,18 @@ export default function EditProfilePage() {
   }, [load]);
 
   async function save() {
+    if (!firstName.trim()) {
+      setError("Enter your first name.");
+      return;
+    }
+    if (!stateName || !lga) {
+      setError("Select your state and Local Government Area.");
+      return;
+    }
+
     setSaving(true);
     setError(null);
-    const res = await patchJson("/api/me/profile", { firstName, lastName, bio, lga });
+    const res = await patchJson("/api/me/profile", { firstName: firstName.trim(), lastName, bio, lga, avatarUrl });
     setSaving(false);
     if (!res.ok) {
       setError(res.message);
@@ -56,7 +76,7 @@ export default function EditProfilePage() {
   }
 
   if (error && !loaded) return <ErrorState message={error} onRetry={load} />;
-  if (!loaded) return <LoadingState label="Loading profile…" />;
+  if (!loaded) return <LoadingState label="Loading profile..." />;
 
   return (
     <main style={{ minHeight: "100vh", background: "var(--c-off)", paddingBottom: 40 }}>
@@ -76,32 +96,34 @@ export default function EditProfilePage() {
       </header>
 
       <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
-        <div className="flex justify-center py-2">
-          <div style={{ position: "relative" }}>
-            <Avatar name={firstName || "You"} size={84} palette="bold" />
-            <div
-              style={{
-                position: "absolute",
-                right: -2,
-                bottom: -2,
-                width: 30,
-                height: 30,
-                borderRadius: "50%",
-                background: "var(--c-gold)",
-                border: "2px solid #fff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 13,
-              }}
-            >
-              📷
-            </div>
-          </div>
-        </div>
+        <ProfilePhotoPicker name={firstName || "You"} value={avatarUrl} onChange={setAvatarUrl} />
         <FormField label="First name (public)" value={firstName} onChange={setFirstName} required />
         <FormField label="Family name (private)" value={lastName} onChange={setLastName} />
         <FormField label="Bio" value={bio} onChange={setBio} multiline rows={3} maxLength={160} />
+        <div>
+          <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 6 }}>
+            State
+          </div>
+          <select
+            value={stateName}
+            onChange={(e) => {
+              const nextState = e.target.value;
+              const firstLga = NIGERIA_STATES.find((state) => state.name === nextState)?.lgas[0] ?? "";
+              setStateName(nextState);
+              setLga(firstLga);
+            }}
+            className="w-full rounded-lg border px-4 py-3 text-sm"
+            style={{ borderColor: "var(--c-line)", color: "var(--c-ink)" }}
+            required
+          >
+            <option value="">Select state</option>
+            {NIGERIA_STATES.map((state) => (
+              <option key={state.name} value={state.name}>
+                {state.name}
+              </option>
+            ))}
+          </select>
+        </div>
         <div>
           <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 6 }}>
             Local Government Area
@@ -111,13 +133,13 @@ export default function EditProfilePage() {
             onChange={(e) => setLga(e.target.value)}
             className="w-full rounded-lg border px-4 py-3 text-sm"
             style={{ borderColor: "var(--c-line)", color: "var(--c-ink)" }}
+            disabled={!selectedState}
+            required
           >
-            {ALL_LGAS.map((l, i) => (
-              // Index included in the key: a handful of LGA names legitimately
-              // repeat across different states (e.g. "Nasarawa", "Obi"), so the
-              // name alone isn't a unique React key here.
-              <option key={`${l}-${i}`} value={l}>
-                {l}
+            <option value="">{selectedState ? "Select LGA" : "Select a state first"}</option>
+            {selectedState?.lgas.map((localGovernment) => (
+              <option key={`${selectedState.name}-${localGovernment}`} value={localGovernment}>
+                {localGovernment}
               </option>
             ))}
           </select>
@@ -127,7 +149,7 @@ export default function EditProfilePage() {
             {error}
           </p>
         )}
-        <PButton label={saving ? "Saving…" : "Save changes"} onClick={save} disabled={saving} />
+        <PButton label={saving ? "Saving..." : "Save changes"} onClick={save} disabled={saving} />
       </div>
     </main>
   );

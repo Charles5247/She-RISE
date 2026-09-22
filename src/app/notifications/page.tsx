@@ -46,6 +46,7 @@ function NotificationRow({ n, onClick }: { n: NotificationItem; onClick: () => v
         name={n.actor?.firstName || "SheRISE"}
         size={40}
         palette="warm"
+        imageUrl={n.actor?.avatarUrl ?? null}
         badge={{ bg: "var(--c-magenta)", icon: <span style={{ color: "#fff" }}>{kindIcon(n.kind)}</span> }}
       />
       <div style={{ flex: 1 }}>

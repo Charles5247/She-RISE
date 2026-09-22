@@ -56,7 +56,7 @@ export default function ProfilePage() {
         }}
       >
         <div style={{ display: "flex", justifyContent: "center" }}>
-          <Avatar name={profile.firstName} size={84} palette="bold" ring="var(--c-gold)" />
+          <Avatar name={profile.firstName} size={84} palette="bold" ring="var(--c-gold)" imageUrl={profile.avatarUrl} />
         </div>
         <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 800, marginTop: 12 }}>{profile.firstName}</div>
         {profile.lga && <div style={{ fontSize: 12, color: "var(--c-dark-text-soft)", marginTop: 2 }}>{profile.lga}</div>}

@@ -118,6 +118,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
             palette={isMilestone ? "bold" : "warm"}
             ring={post.author.isVerifiedTrainer ? "var(--c-gold)" : null}
             badge={post.author.isVerifiedTrainer ? trainerBadge() : null}
+            imageUrl={post.author.avatarUrl}
           />
           <div>
             <div style={{ fontSize: 14, fontWeight: 700 }}>{post.author.firstName}</div>
@@ -144,7 +145,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
         <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
           {comments.map((c) => (
             <div key={c.id} style={{ display: "flex", gap: 10 }}>
-              <Avatar name={c.author.firstName} size={32} badge={c.author.isVerifiedTrainer ? trainerBadge() : null} ring={c.author.isVerifiedTrainer ? "var(--c-gold)" : null} />
+              <Avatar name={c.author.firstName} size={32} badge={c.author.isVerifiedTrainer ? trainerBadge() : null} ring={c.author.isVerifiedTrainer ? "var(--c-gold)" : null} imageUrl={c.author.avatarUrl} />
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <span style={{ fontSize: 12, fontWeight: 700 }}>{c.author.firstName}</span>

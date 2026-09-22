@@ -325,3 +325,8 @@ export const NIGERIA_STATES: NigeriaState[] = [
 // Flat list of every LGA nationwide, for simple non-cascading dropdowns
 // that just need "all 774 options" rather than a state -> LGA cascade.
 export const ALL_LGAS: string[] = NIGERIA_STATES.flatMap((s) => s.lgas);
+
+export function findStateForLga(lga: string | null | undefined): NigeriaState | undefined {
+  if (!lga) return undefined;
+  return NIGERIA_STATES.find((state) => state.lgas.includes(lga));
+}

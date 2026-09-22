@@ -23,14 +23,19 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   if (!firstName || !lga) {
     return Response.json({ code: "BAD_REQUEST", message: "First name and LGA are required." }, { status: 400 });
   }
+  if (avatarUrl !== undefined && avatarUrl !== null && !avatarUrl.startsWith("data:image/")) {
+    return Response.json({ code: "BAD_REQUEST", message: "Profile photo must be an image." }, { status: 400 });
+  }
 
   const db = getDb();
+  const hasAvatarUrl = Object.hasOwn(body as object, "avatarUrl");
   await db.prepare(
-    `UPDATE users SET first_name = ?, last_name = ?, age = ?, lga = ?, avatar_url = ?,
+    `UPDATE users SET first_name = ?, last_name = ?, age = ?, lga = ?,
+       avatar_url = CASE WHEN ? THEN ? ELSE avatar_url END,
        language = COALESCE(?, language), skill_category = COALESCE(?, skill_category),
        onboarding_complete = 1, updated_at = NOW()
      WHERE id = ?`
-  ).run(firstName, lastName || null, age || null, lga, avatarUrl || null, language || null, skillCategory || null, user.id);
+  ).run(firstName, lastName || null, age || null, lga, hasAvatarUrl ? 1 : 0, avatarUrl || null, language || null, skillCategory || null, user.id);
 
   return Response.json({ ok: true });
 });

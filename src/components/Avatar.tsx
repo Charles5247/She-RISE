@@ -54,9 +54,10 @@ export interface AvatarProps {
   ring?: string | null;
   badge?: { bg: string; icon: React.ReactNode } | null;
   className?: string;
+  imageUrl?: string | null;
 }
 
-export function Avatar({ name, size = 40, palette = "warm", ring = null, badge = null, className }: AvatarProps) {
+export function Avatar({ name, size = 40, palette = "warm", ring = null, badge = null, className, imageUrl = null }: AvatarProps) {
   const initials =
     name
       .trim()
@@ -86,6 +87,9 @@ export function Avatar({ name, size = 40, palette = "warm", ring = null, badge =
           height: size,
           borderRadius: "50%",
           background: `linear-gradient(135deg, ${a} 0%, ${b} 100%)`,
+          backgroundImage: imageUrl ? `url(${JSON.stringify(imageUrl)})` : undefined,
+          backgroundPosition: "center",
+          backgroundSize: "cover",
           color: "#fff",
           display: "flex",
           alignItems: "center",
@@ -93,10 +97,10 @@ export function Avatar({ name, size = 40, palette = "warm", ring = null, badge =
           fontFamily: FONTS[palette],
           fontWeight: palette === "bold" ? 700 : 500,
           fontSize: size * 0.42,
-          letterSpacing: "-0.02em",
+          letterSpacing: 0,
         }}
       >
-        {initials}
+        {!imageUrl && initials}
       </div>
       {badge && (
         <div

@@ -95,7 +95,7 @@ export default function FeedPage() {
             <BellIcon size={20} />
           </Link>
           <Link href="/profile" aria-label="My profile">
-            <Avatar name={user?.first_name || "Me"} size={30} palette="warm" />
+            <Avatar name={user?.first_name || "Me"} size={30} palette="warm" imageUrl={user?.avatar_url ?? null} />
           </Link>
         </div>
       </header>

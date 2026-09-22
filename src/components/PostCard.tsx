@@ -83,6 +83,7 @@ export function PostCard({
           palette={isMilestone ? "bold" : "warm"}
           ring={post.author.isVerifiedTrainer ? "var(--c-gold)" : null}
           badge={post.author.isVerifiedTrainer ? trainerBadge() : null}
+          imageUrl={post.author.avatarUrl}
         />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 700 }}>{post.author.firstName}</div>

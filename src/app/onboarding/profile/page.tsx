@@ -1,22 +1,25 @@
 "use client";
-// Screen 05 — Create profile. Name, LGA, avatar (camera-overlay avatar
-// picker is stubbed to initials since real photo upload is out of scope for
-// this pass — see BUILD_STATUS.md "Photography commission" open item).
+
+// Screen 05 - Create profile. Name, state/LGA, and profile photo.
 // First name is public; last name stays private per Design Principle 01.
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AuthShell, Avatar, FormField, PButton } from "@/components";
+import { AuthShell, FormField, PButton, ProfilePhotoPicker } from "@/components";
 import { postJson } from "@/lib/apiClient";
-import { ALL_LGAS } from "@/lib/nigeria-locations";
+import { NIGERIA_STATES } from "@/lib/nigeria-locations";
 
 export default function CreateProfilePage() {
   const router = useRouter();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [age, setAge] = useState("");
-  const [lga, setLga] = useState(ALL_LGAS[0]);
+  const [stateName, setStateName] = useState("");
+  const [lga, setLga] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const selectedState = useMemo(() => NIGERIA_STATES.find((state) => state.name === stateName), [stateName]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,6 +27,11 @@ export default function CreateProfilePage() {
       setError("Enter your first name.");
       return;
     }
+    if (!stateName || !lga) {
+      setError("Select your state and Local Government Area.");
+      return;
+    }
+
     setError(null);
     setLoading(true);
     const result = await postJson("/api/auth/complete-profile", {
@@ -31,6 +39,7 @@ export default function CreateProfilePage() {
       lastName: lastName.trim() || undefined,
       age: age ? Number(age) : undefined,
       lga,
+      avatarUrl,
     });
     setLoading(false);
     if (!result.ok) {
@@ -43,32 +52,34 @@ export default function CreateProfilePage() {
   return (
     <AuthShell title="Create your profile" subtitle="Only your first name is shown publicly. Your family name stays private.">
       <form onSubmit={submit} className="flex flex-col gap-4">
-        <div className="flex justify-center py-2">
-          <div style={{ position: "relative" }}>
-            <Avatar name={firstName || "You"} size={84} palette="bold" />
-            <div
-              style={{
-                position: "absolute",
-                right: -2,
-                bottom: -2,
-                width: 30,
-                height: 30,
-                borderRadius: "50%",
-                background: "var(--c-gold)",
-                border: "2px solid #fff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 13,
-              }}
-            >
-              📷
-            </div>
-          </div>
-        </div>
+        <ProfilePhotoPicker name={firstName || "You"} value={avatarUrl} onChange={setAvatarUrl} />
         <FormField label="First name (public)" value={firstName} onChange={setFirstName} placeholder="Adaeze" required autoFocus />
         <FormField label="Family name (private)" value={lastName} onChange={setLastName} placeholder="Okafor" hint="Only trainers and staff can see this." />
         <FormField label="Age" value={age} onChange={setAge} type="number" placeholder="27" />
+        <div>
+          <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 6 }}>
+            State
+          </div>
+          <select
+            value={stateName}
+            onChange={(e) => {
+              const nextState = e.target.value;
+              const firstLga = NIGERIA_STATES.find((state) => state.name === nextState)?.lgas[0] ?? "";
+              setStateName(nextState);
+              setLga(firstLga);
+            }}
+            className="w-full rounded-lg border px-4 py-3 text-sm"
+            style={{ borderColor: "var(--c-line)", color: "var(--c-ink)" }}
+            required
+          >
+            <option value="">Select state</option>
+            {NIGERIA_STATES.map((state) => (
+              <option key={state.name} value={state.name}>
+                {state.name}
+              </option>
+            ))}
+          </select>
+        </div>
         <div>
           <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 6 }}>
             Local Government Area
@@ -78,13 +89,13 @@ export default function CreateProfilePage() {
             onChange={(e) => setLga(e.target.value)}
             className="w-full rounded-lg border px-4 py-3 text-sm"
             style={{ borderColor: "var(--c-line)", color: "var(--c-ink)" }}
+            disabled={!selectedState}
+            required
           >
-            {ALL_LGAS.map((l, i) => (
-              // Index included in the key: a handful of LGA names legitimately
-              // repeat across different states (e.g. "Nasarawa", "Obi"), so the
-              // name alone isn't a unique React key here.
-              <option key={`${l}-${i}`} value={l}>
-                {l}
+            <option value="">{selectedState ? "Select LGA" : "Select a state first"}</option>
+            {selectedState?.lgas.map((localGovernment) => (
+              <option key={`${selectedState.name}-${localGovernment}`} value={localGovernment}>
+                {localGovernment}
               </option>
             ))}
           </select>
@@ -94,7 +105,7 @@ export default function CreateProfilePage() {
             {error}
           </p>
         )}
-        <PButton type="submit" label={loading ? "Saving…" : "Continue"} disabled={loading} />
+        <PButton type="submit" label={loading ? "Saving..." : "Continue"} disabled={loading} />
       </form>
     </AuthShell>
   );

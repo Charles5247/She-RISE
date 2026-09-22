@@ -45,11 +45,18 @@ export async function PATCH(req: Request) {
     lga?: string;
     avatarUrl?: string;
   };
+  if (avatarUrl !== undefined && avatarUrl !== null && !avatarUrl.startsWith("data:image/")) {
+    return Response.json({ code: "BAD_REQUEST", message: "Profile photo must be an image." }, { status: 400 });
+  }
+
   const db = getDb();
+  const hasAvatarUrl = Object.hasOwn(body as object, "avatarUrl");
   await db.prepare(
     `UPDATE users SET first_name = COALESCE(?, first_name), last_name = COALESCE(?, last_name),
-       bio = COALESCE(?, bio), lga = COALESCE(?, lga), avatar_url = COALESCE(?, avatar_url), updated_at = NOW()
+       bio = COALESCE(?, bio), lga = COALESCE(?, lga),
+       avatar_url = CASE WHEN ? THEN ? ELSE avatar_url END,
+       updated_at = NOW()
      WHERE id = ?`
-  ).run(firstName ?? null, lastName ?? null, bio ?? null, lga ?? null, avatarUrl ?? null, user.id);
+  ).run(firstName ?? null, lastName ?? null, bio ?? null, lga ?? null, hasAvatarUrl ? 1 : 0, avatarUrl ?? null, user.id);
   return Response.json({ ok: true });
 }

@@ -118,6 +118,7 @@ body {
   color: var(--c-ink);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
   transition:
     background-color 180ms ease,
     color 180ms ease;
@@ -151,6 +152,14 @@ body {
 }
 .sr-theme-toggle span {
   line-height: 1;
+}
+
+@media (max-width: 600px) {
+  .sr-theme-toggle {
+    top: auto;
+    right: 16px;
+    bottom: 92px;
+  }
 }
 
 /* Some older screens still provide white through inline styles. Keep those
@@ -340,6 +349,9 @@ body {
   color: var(--c-dark-text-soft);
   margin-top: 6px;
 }
+.sr-portal-header-copy {
+  min-width: 0;
+}
 .sr-portal-content {
   max-width: 1168px;
   margin: auto;
@@ -467,9 +479,96 @@ body {
   align-items: center;
   text-decoration: underline;
 }
-@media (max-width: 600px) {
+@media (max-width: 767px) {
+  .sr-admin-shell-inner {
+    padding: 72px 16px 40px !important;
+  }
+  .sr-admin-shell-inner > :first-child {
+    align-items: stretch !important;
+  }
+  .sr-admin-brand-nav {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 16px !important;
+  }
+  .sr-admin-nav {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .sr-admin-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .sr-admin-nav a {
+    flex: 0 0 auto;
+    min-height: 32px;
+  }
+  .sr-admin-actions {
+    flex-wrap: wrap;
+  }
+  .sr-admin-actions > div:first-child {
+    flex: 1 1 160px;
+  }
+  .sr-admin-content {
+    overflow-x: auto;
+  }
+  .sr-admin-overview {
+    padding: 16px !important;
+  }
+  .sr-admin-overview-layout,
+  .sr-admin-overview-lower {
+    grid-template-columns: 1fr !important;
+  }
+  .sr-admin-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .sr-admin-filter-row {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .sr-admin-filter-row select {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+  .sr-admin-status-row {
+    overflow-x: auto;
+  }
+  .sr-admin-status-tabs {
+    flex: 0 0 auto;
+  }
+  .sr-admin-table-wrap {
+    overflow-x: auto !important;
+  }
+  .sr-admin-table-wrap > * {
+    min-width: 760px;
+  }
+  .sr-admin-login {
+    grid-template-columns: 1fr !important;
+  }
+  .sr-admin-login-form-side {
+    min-height: 100svh;
+    padding: 76px 20px 32px !important;
+  }
+  .sr-admin-login-form-side form {
+    padding: 28px 20px !important;
+  }
   .sr-portal-header {
+    align-items: flex-start;
     padding: 20px 16px;
+  }
+  .sr-portal-logout {
+    align-self: flex-start;
+  }
+  .sr-portal-content {
+    padding: 24px 16px;
+  }
+  .sr-portal-heading {
+    margin-bottom: 22px;
+  }
+  .sr-portal-header {
+    gap: 16px;
+    flex-direction: column;
   }
   .sr-portal-header strong span {
     display: block;

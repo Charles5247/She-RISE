@@ -43,13 +43,14 @@ export function StaffPortal({
   return (
     <main className="sr-portal">
       <header className="sr-portal-header">
-        <div>
+        <div className="sr-portal-header-copy">
           <strong>
             SheRISE<span> / {role} portal</span>
           </strong>
           <p>Welcome, {name}</p>
         </div>
         <PButton
+          className="sr-portal-logout"
           label={loggingOut ? "Logging out..." : "Log out"}
           disabled={loggingOut}
           full={false}
@@ -65,7 +66,11 @@ export function StaffPortal({
         />
       </header>
       <div className="sr-portal-content">
-        {logoutError && <p className="sr-portal-error" role="alert">{logoutError}</p>}
+        {logoutError && (
+          <p className="sr-portal-error" role="alert">
+            {logoutError}
+          </p>
+        )}
         <div className="sr-portal-heading">
           <p className="sr-label">EVERY RISE, ON RECORD</p>
           <h1>{title}</h1>

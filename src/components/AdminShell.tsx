@@ -31,7 +31,15 @@ export interface AdminShellProps {
   right?: React.ReactNode;
 }
 
-export function AdminShell({ title, subtitle, activeNav, children, userName = "Admin", onExport, right }: AdminShellProps) {
+export function AdminShell({
+  title,
+  subtitle,
+  activeNav,
+  children,
+  userName = "Admin",
+  onExport,
+  right,
+}: AdminShellProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -50,8 +58,19 @@ export function AdminShell({ title, subtitle, activeNav, children, userName = "A
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--c-off)", color: "var(--c-ink)", fontFamily: "var(--font-body)" }}>
-      <div style={{ maxWidth: 1440, margin: "0 auto", padding: "24px 40px 60px" }}>
+    <div
+      className="sr-admin-shell"
+      style={{
+        minHeight: "100vh",
+        background: "var(--c-off)",
+        color: "var(--c-ink)",
+        fontFamily: "var(--font-body)",
+      }}
+    >
+      <div
+        className="sr-admin-shell-inner"
+        style={{ maxWidth: 1440, margin: "0 auto", padding: "24px 40px 60px" }}
+      >
         <div
           style={{
             display: "flex",
@@ -63,7 +82,15 @@ export function AdminShell({ title, subtitle, activeNav, children, userName = "A
             gap: 16,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 28, flexWrap: "wrap" }}>
+          <div
+            className="sr-admin-brand-nav"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 28,
+              flexWrap: "wrap",
+            }}
+          >
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div
                 style={{
@@ -83,17 +110,36 @@ export function AdminShell({ title, subtitle, activeNav, children, userName = "A
                 S
               </div>
               <div>
-                <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 800, letterSpacing: "-0.02em" }}>
+                <div
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: 18,
+                    fontWeight: 800,
+                    letterSpacing: "-0.02em",
+                  }}
+                >
                   SheRISE M&amp;E
                 </div>
-                <div className="sr-label" style={{ fontSize: 9, color: "var(--c-ink-soft)" }}>
+                <div
+                  className="sr-label"
+                  style={{ fontSize: 9, color: "var(--c-ink-soft)" }}
+                >
                   {subtitle || "ADMIN · CONSENT-FIRST"}
                 </div>
               </div>
             </div>
-            <nav style={{ display: "flex", gap: 18, fontSize: 13, flexWrap: "wrap" }}>
+            <nav
+              className="sr-admin-nav"
+              style={{
+                display: "flex",
+                gap: 18,
+                fontSize: 13,
+                flexWrap: "wrap",
+              }}
+            >
               {NAV.map((t) => {
-                const isActive = t.k === activeNav || pathname?.startsWith(t.href);
+                const isActive =
+                  t.k === activeNav || pathname?.startsWith(t.href);
                 return (
                   <Link
                     key={t.k}
@@ -102,7 +148,9 @@ export function AdminShell({ title, subtitle, activeNav, children, userName = "A
                       padding: "4px 0",
                       color: isActive ? "var(--c-ink)" : "var(--c-ink-soft)",
                       fontWeight: isActive ? 700 : 500,
-                      borderBottom: isActive ? "2px solid var(--c-magenta)" : "2px solid transparent",
+                      borderBottom: isActive
+                        ? "2px solid var(--c-magenta)"
+                        : "2px solid transparent",
                     }}
                   >
                     {t.l}
@@ -111,7 +159,10 @@ export function AdminShell({ title, subtitle, activeNav, children, userName = "A
               })}
             </nav>
           </div>
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <div
+            className="sr-admin-actions"
+            style={{ display: "flex", gap: 10, alignItems: "center" }}
+          >
             <div
               style={{
                 padding: "8px 12px",
@@ -146,22 +197,71 @@ export function AdminShell({ title, subtitle, activeNav, children, userName = "A
                 <DownloadIcon size={12} /> Export PDF
               </button>
             )}
-            <button onClick={logout} disabled={loggingOut} aria-label="Log out" style={{ border: "1px solid var(--c-line)", background: "#fff", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, padding: "5px 10px 5px 5px", fontSize: 12, fontWeight: 700, color: "var(--c-ink)" }}>
+            <button
+              onClick={logout}
+              disabled={loggingOut}
+              aria-label="Log out"
+              style={{
+                border: "1px solid var(--c-line)",
+                background: "#fff",
+                borderRadius: 6,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "5px 10px 5px 5px",
+                fontSize: 12,
+                fontWeight: 700,
+                color: "var(--c-ink)",
+              }}
+            >
               <Avatar name={userName} size={28} palette="clean" />
               {loggingOut ? "Logging out…" : "Log out"}
             </button>
           </div>
         </div>
-        {logoutError && <p role="alert" style={{ color: "var(--c-danger)", fontSize: 12, textAlign: "right", marginTop: 8 }}>{logoutError}</p>}
+        {logoutError && (
+          <p
+            role="alert"
+            style={{
+              color: "var(--c-danger)",
+              fontSize: 12,
+              textAlign: "right",
+              marginTop: 8,
+            }}
+          >
+            {logoutError}
+          </p>
+        )}
         {(title || right) && (
-          <div style={{ padding: "20px 0 12px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+          <div
+            style={{
+              padding: "20px 0 12px",
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: 16,
+              flexWrap: "wrap",
+            }}
+          >
             {title && (
-              <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 800, letterSpacing: "-0.02em" }}>{title}</div>
+              <div
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: 26,
+                  fontWeight: 800,
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {title}
+              </div>
             )}
             {right}
           </div>
         )}
-        <div style={{ marginTop: title ? 0 : 20 }}>{children}</div>
+        <div className="sr-admin-content" style={{ marginTop: title ? 0 : 20 }}>
+          {children}
+        </div>
       </div>
     </div>
   );

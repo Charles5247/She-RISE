@@ -57,6 +57,13 @@ npm run dev
 ```
 
 Open http://localhost:3000. Demo data seeds automatically on first request.
+If the browser console reports a signup API 404 after code changes, stop any
+older dev server still using port 3000 and restart `npm run dev` from this
+checkout. The `/api/auth/signup` route is part of the project. The hydration
+warning in the supplied log shows extensions injecting attributes and
+wrapping the signup input before React starts; check again in a private
+window with extensions disabled. It is not evidence of an application render
+mismatch.
 
 ## Demo credentials
 
@@ -81,7 +88,7 @@ necessarily what's printed here.
 
 This is one Next.js codebase serving two logical products — the participant
 app and the staff/admin dashboard — split at request time by
-`src/middleware.ts` reading `NEXT_PUBLIC_APP_SURFACE`:
+`src/proxy.ts` reading `NEXT_PUBLIC_APP_SURFACE`:
 
 - Deploy once with `NEXT_PUBLIC_APP_SURFACE=participant` → bind to
   `sherise.com`. All `/admin/*` routes 404 on this deployment.
@@ -91,13 +98,61 @@ app and the staff/admin dashboard — split at request time by
   from one running instance.
 
 Both deployments share the same `DATABASE_URL` — the split is purely at the
-routing layer, not the data layer.
+routing layer, not the data layer. On Vercel, create two projects from the
+same Git repository (or deploy the same project twice) and set a different
+surface value in each project's Production environment before deploying.
+
+## Deploy to Vercel
+
+1. Push this repository to GitHub, then import it from the Vercel dashboard.
+   Keep the Root Directory at `.` and Framework Preset at **Next.js**. The
+   project uses `npm run build`; Vercel runs the production server for you.
+2. Create a hosted PostgreSQL database (Supabase is supported) and copy its
+   connection URI. Use the transaction pooler URI for serverless hosting.
+3. In **Settings → Environment Variables**, add `DATABASE_URL` and
+   `NEXT_PUBLIC_APP_SURFACE` (`participant` or `admin`). Add
+   `SEED_DEMO_PASSWORD` with a unique value if demo accounts should be seeded;
+   never use the documented demo password on a public deployment. Keep
+   database credentials and any service-role key server-only, without the
+   `NEXT_PUBLIC_` prefix.
+4. Deploy. Repeat with a second Vercel project for the other surface if you
+   want separate participant and admin domains. Set the custom domains under
+   **Settings → Domains** and configure DNS as Vercel instructs.
+5. Visit the site and check the relevant login page. The database schema is
+   created automatically on the first database request. New environments
+   should use a dedicated database, since the app seeds demo records into an
+   empty database.
+
+## Deploy to Render
+
+1. Create a **Web Service** in Render connected to this repository. Choose
+   the Node runtime and set the Root Directory to `.`.
+2. Set **Build Command** to `npm install && npm run build` and **Start Command**
+   to `npm run start`. Do not deploy this app as a static site; its API routes
+   and database access require a running Node server.
+3. In **Environment**, add `DATABASE_URL` from a hosted PostgreSQL provider
+   and `NEXT_PUBLIC_APP_SURFACE` (`participant` or `admin`). Add a unique
+   `SEED_DEMO_PASSWORD` if seeding demo users. Do not put secrets in variables
+   prefixed with `NEXT_PUBLIC_`.
+4. Create a second Web Service from the same repository for the other surface
+   if you want separate participant and admin domains. Set the opposite
+   `NEXT_PUBLIC_APP_SURFACE` value on it, then attach custom domains in
+   Render's service settings and configure the DNS records Render provides.
+5. Wait for the deploy to become live, then open `/login` for participants or
+   `/admin/login` for staff. The app creates its schema on the first database
+   request; use a dedicated database for each environment.
+
+For either host, use a production PostgreSQL/Supabase database reachable from
+the host. Do not use a local database URL, and do not point staging and
+production at the same database unless sharing their users and demo seed data
+is intentional. See [`.env.example`](./.env.example) for all supported
+variables.
 
 ## Stack
 
 - Next.js App Router (TypeScript, Tailwind v4) — one codebase for both the
   participant app and the admin dashboard, split by the
-  `NEXT_PUBLIC_APP_SURFACE` env var + `src/middleware.ts` for separate
+  `NEXT_PUBLIC_APP_SURFACE` env var + `src/proxy.ts` for separate
   deployment to `sherise.com` / `sherise-admin.com`.
 - PostgreSQL via the `postgres` npm package (postgres.js — pure-JS, zero
   native dependencies) for the data layer. See `src/lib/schema.sql` and

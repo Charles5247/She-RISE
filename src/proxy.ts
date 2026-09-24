@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
  * sherise-admin.com with NEXT_PUBLIC_APP_SURFACE=admin. Locally/preview
  * (surface="both") everything is reachable so you can demo both sides.
  */
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const surface = process.env.NEXT_PUBLIC_APP_SURFACE;
   const { pathname } = req.nextUrl;
 

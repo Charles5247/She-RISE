@@ -159,7 +159,7 @@ since the pattern is a pure catch-all with no behavior change on the
 success path, but it wasn't done here to keep this pass scoped to the
 routes actually being touched.
 
-### Deployment surface separation (`src/middleware.ts`, `src/lib/domain.ts`)
+### Deployment surface separation (`src/proxy.ts`, `src/lib/domain.ts`)
 Implements the "two domains, one codebase" requirement: set
 `NEXT_PUBLIC_APP_SURFACE=participant` on the sherise.com deployment to 404 all
 `/admin/*` routes; set it to `admin` on sherise-admin.com to redirect

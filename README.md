@@ -84,6 +84,18 @@ necessarily what's printed here.
 | Trainer     | any seeded trainer email, e.g. `titilayo@sherise.org`                           | `password123`       | `/admin/login` |
 | Participant | `08100000001` (fixed/stable — hardcoded in `src/lib/seed.ts`, survives reseeds) | `password123`       | `/login`       |
 
+## Staff accounts and course management
+
+There is no public trainer or sponsor signup. An administrator signs in at
+`/admin/login`, opens **Accounts**, and creates trainer or sponsor accounts
+with an email or phone number and a temporary password. Share those details
+with the account holder securely. Trainers and sponsors use `/admin/login`;
+the app sends each role to its own portal (`/trainer/dashboard` or
+`/sponsor/dashboard`). Administrators use `/admin/overview` and can manage
+accounts under **Accounts**. Courses (pathways) can be added, edited, or
+removed from **Content**. Removing a course also removes its lessons and
+learner progress.
+
 ## Deploying the two surfaces separately
 
 This is one Next.js codebase serving two logical products — the participant
@@ -91,9 +103,10 @@ app and the staff/admin dashboard — split at request time by
 `src/proxy.ts` reading `NEXT_PUBLIC_APP_SURFACE`:
 
 - Deploy once with `NEXT_PUBLIC_APP_SURFACE=participant` → bind to
-  `sherise.com`. All `/admin/*` routes 404 on this deployment.
+  `sherise.com`. Staff portals and `/api/admin/*` routes 404 on this deployment.
 - Deploy again with `NEXT_PUBLIC_APP_SURFACE=admin` → bind to
-  `sherise-admin.com`. Every non-admin route redirects to `/admin/login`.
+  `sherise-admin.com`. Participant routes redirect to `/admin/login`; admin,
+  trainer, and sponsor portals are available on this deployment.
 - Leave `NEXT_PUBLIC_APP_SURFACE` unset for local dev to reach both surfaces
   from one running instance.
 

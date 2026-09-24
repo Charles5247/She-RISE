@@ -47,7 +47,6 @@ export function useSessionUser(opts: { loginPath?: string; expectedRole?: Sessio
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expectedRole, loginPath, router]);
 
   return { user, loading };

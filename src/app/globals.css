@@ -107,6 +107,49 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Participant authentication: the handoff's editorial mobile layout. */
+.sr-auth-stage {
+  min-height: 100svh;
+  background: var(--c-off);
+}
+.sr-auth-panel {
+  width: 100%;
+  max-width: 434px;
+  min-height: 100svh;
+  margin: 0 auto;
+  padding: max(24px, env(safe-area-inset-top)) 22px max(32px, env(safe-area-inset-bottom));
+  background: var(--c-off);
+}
+.sr-auth-form { display: flex; flex-direction: column; gap: 16px; }
+.sr-auth-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--c-magenta);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+}
+.sr-auth-staff {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 32px;
+  padding: 14px;
+  border: 2px solid var(--c-gold);
+  border-radius: 8px;
+  background: var(--c-plum);
+  color: var(--c-cream);
+}
+@media (min-width: 640px) {
+  .sr-auth-stage {
+    padding: 48px 24px;
+    background: radial-gradient(ellipse at top right, rgba(232,184,74,.12), transparent 55%),
+      radial-gradient(ellipse at bottom left, rgba(212,48,110,.10), transparent 55%), var(--c-off);
+  }
+  .sr-auth-panel { min-height: 680px; padding: 28px 32px 40px; }
+}
+
 * {
   box-sizing: border-box;
 }

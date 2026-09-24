@@ -12,6 +12,7 @@ import { useState } from "react";
 const NAV = [
   { k: "overview", l: "Overview", href: "/admin/overview" },
   { k: "participants", l: "Participants", href: "/admin/participants" },
+  { k: "users", l: "Accounts", href: "/admin/users" },
   { k: "referrals", l: "Referrals", href: "/admin/referrals" },
   { k: "content", l: "Content", href: "/admin/content" },
   { k: "perception", l: "Perception", href: "/admin/perception" },

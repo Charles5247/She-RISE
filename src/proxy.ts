@@ -12,11 +12,14 @@ export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const isAdminPath = pathname.startsWith("/admin");
+  const isTrainerPath = pathname.startsWith("/trainer");
+  const isSponsorPath = pathname.startsWith("/sponsor");
+  const isStaffPath = isAdminPath || isTrainerPath || isSponsorPath;
   const isApiAdminPath = pathname.startsWith("/api/admin");
-  const isMarketingOrApp =
-    !isAdminPath && !isApiAdminPath && !pathname.startsWith("/api/") && !pathname.startsWith("/_next");
+  const isApiStaffPath = isApiAdminPath || pathname.startsWith("/api/trainer/dashboard") || pathname.startsWith("/api/sponsor/dashboard");
+  const isMarketingOrApp = !isStaffPath && !pathname.startsWith("/api/") && !pathname.startsWith("/_next");
 
-  if (surface === "participant" && (isAdminPath || isApiAdminPath)) {
+  if (surface === "participant" && (isStaffPath || isApiStaffPath)) {
     return NextResponse.rewrite(new URL("/404", req.url));
   }
 

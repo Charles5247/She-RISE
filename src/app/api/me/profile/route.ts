@@ -1,5 +1,6 @@
 import { getDb } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
+import { withErrorHandling } from "@/lib/apiError";
 
 // GET /api/me/profile — My profile (screen 19)
 export async function GET() {
@@ -34,7 +35,7 @@ export async function GET() {
 }
 
 // PATCH /api/me/profile — edit profile (screen 20)
-export async function PATCH(req: Request) {
+export const PATCH = withErrorHandling(async (req: Request) => {
   const user = await getSessionUser();
   if (!user) return Response.json({ code: "UNAUTHORIZED", message: "Sign in required." }, { status: 401 });
   const body = await req.json().catch(() => ({}));
@@ -51,12 +52,19 @@ export async function PATCH(req: Request) {
 
   const db = getDb();
   const hasAvatarUrl = Object.hasOwn(body as object, "avatarUrl");
-  await db.prepare(
-    `UPDATE users SET first_name = COALESCE(?, first_name), last_name = COALESCE(?, last_name),
-       bio = COALESCE(?, bio), lga = COALESCE(?, lga),
-       avatar_url = CASE WHEN ? THEN ? ELSE avatar_url END,
-       updated_at = NOW()
-     WHERE id = ?`
-  ).run(firstName ?? null, lastName ?? null, bio ?? null, lga ?? null, hasAvatarUrl ? 1 : 0, avatarUrl ?? null, user.id);
+  const profileFields = `first_name = COALESCE(?, first_name), last_name = COALESCE(?, last_name),
+       bio = COALESCE(?, bio), lga = COALESCE(?, lga)`;
+  if (hasAvatarUrl) {
+    // Keep avatar assignment out of a CASE expression: Postgres requires a
+    // boolean condition there, and the old integer flag could prevent the
+    // photo from being written even while the other profile fields updated.
+    await db.prepare(
+      `UPDATE users SET ${profileFields}, avatar_url = ?, updated_at = NOW() WHERE id = ?`
+    ).run(firstName ?? null, lastName ?? null, bio ?? null, lga ?? null, avatarUrl ?? null, user.id);
+  } else {
+    await db.prepare(
+      `UPDATE users SET ${profileFields}, updated_at = NOW() WHERE id = ?`
+    ).run(firstName ?? null, lastName ?? null, bio ?? null, lga ?? null, user.id);
+  }
   return Response.json({ ok: true });
-}
+});

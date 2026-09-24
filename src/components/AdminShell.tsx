@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Avatar } from "./Avatar";
 import { SearchIcon, DownloadIcon } from "./Icon";
 import { postJson } from "@/lib/apiClient";
+import { useState } from "react";
 
 const NAV = [
   { k: "overview", l: "Overview", href: "/admin/overview" },
@@ -32,9 +33,18 @@ export interface AdminShellProps {
 export function AdminShell({ title, subtitle, activeNav, children, userName = "Admin", onExport, right }: AdminShellProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
 
   async function logout() {
-    await postJson("/api/auth/logout");
+    setLoggingOut(true);
+    setLogoutError("");
+    const result = await postJson("/api/auth/logout");
+    if (!result.ok) {
+      setLogoutError(result.message);
+      setLoggingOut(false);
+      return;
+    }
     router.push("/admin/login");
   }
 
@@ -135,11 +145,13 @@ export function AdminShell({ title, subtitle, activeNav, children, userName = "A
                 <DownloadIcon size={12} /> Export PDF
               </button>
             )}
-            <button onClick={logout} style={{ border: "none", background: "transparent", cursor: "pointer" }} title="Log out">
-              <Avatar name={userName} size={32} palette="clean" />
+            <button onClick={logout} disabled={loggingOut} aria-label="Log out" style={{ border: "1px solid var(--c-line)", background: "#fff", borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, padding: "5px 10px 5px 5px", fontSize: 12, fontWeight: 700, color: "var(--c-ink)" }}>
+              <Avatar name={userName} size={28} palette="clean" />
+              {loggingOut ? "Logging out…" : "Log out"}
             </button>
           </div>
         </div>
+        {logoutError && <p role="alert" style={{ color: "var(--c-danger)", fontSize: 12, textAlign: "right", marginTop: 8 }}>{logoutError}</p>}
         {(title || right) && (
           <div style={{ padding: "20px 0 12px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
             {title && (

@@ -23,7 +23,8 @@ export default function AdminLoginPage() {
       setError(result.message);
       return;
     }
-    router.push("/admin/overview");
+    const destination = result.data?.role === "trainer" ? "/trainer/dashboard" : result.data?.role === "sponsor" ? "/sponsor/dashboard" : "/admin/overview";
+    router.push(destination);
   }
 
   return (

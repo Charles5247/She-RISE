@@ -31,7 +31,13 @@ function rand(min: number, max: number) {
 export async function seedIfEmpty() {
   const db = getDb();
   const count = ((await db.prepare("SELECT COUNT(*) as c FROM users").get()) as { c: number }).c;
-  if (count > 0) return { seeded: false };
+  if (count > 0) {
+    // In local development, preserve users already in the database while
+    // filling in any missing documented demo accounts. Production never
+    // receives accounts with the public demo password.
+    if (process.env.NODE_ENV !== "production") await ensureDemoAccounts(db);
+    return { seeded: false };
+  }
 
   const insertUser = db.prepare(`
     INSERT INTO users (id, role, first_name, last_name, phone, email, password_hash, pin_hash,
@@ -363,4 +369,42 @@ export async function seedIfEmpty() {
     new Date(Date.now() - 8 * 86400000).toISOString());
 
   return { seeded: true, adminId, sponsorId, trainerIds, participantIds, demoParticipantId };
+}
+
+async function ensureDemoAccounts(db = getDb()) {
+  const passwordHash = hashPassword(DEMO_PARTICIPANT_PASSWORD);
+  const insertUser = db.prepare(`
+    INSERT INTO users (id, role, first_name, last_name, email, phone, password_hash, onboarding_complete,
+      is_verified_trainer, panic_hide_enabled, wifi_only_downloads)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, 0, 0)
+    ON CONFLICT DO NOTHING
+  `);
+  const demos = [
+    { role: "admin", first: "Morayo", last: "Oduya", email: "admin@sherise.org", phone: null, verified: 0 },
+    { role: "sponsor", first: "David", last: "Falana", email: "sponsor@bluesapphire.ng", phone: null, verified: 0 },
+    { role: "trainer", first: "Titilayo", last: "Balogun", email: "titilayo@sherise.org", phone: null, verified: 1, specialty: "Tailoring & Fashion" },
+    { role: "trainer", first: "Chidinma", last: "Obi", email: "chidinma@sherise.org", phone: null, verified: 1, specialty: "Catering & Baking" },
+    { role: "trainer", first: "Halima", last: "Suleiman", email: "halima@sherise.org", phone: null, verified: 1, specialty: "Soap & Bead Making" },
+    { role: "participant", first: "Halima", last: "Yusuf", email: null, phone: DEMO_PARTICIPANT_PHONE, verified: 0 },
+  ];
+
+  for (const demo of demos) {
+    await insertUser.run(
+      newId("usr"), demo.role, demo.first, demo.last, demo.email, demo.phone, passwordHash, demo.verified,
+    );
+    if (demo.role === "sponsor") {
+      await db.prepare(`
+        INSERT INTO sponsor_profiles (user_id, women_sponsored_count, sponsor_since_year)
+        SELECT id, 34, 2024 FROM users WHERE email = ? AND role = 'sponsor'
+        ON CONFLICT (user_id) DO NOTHING
+      `).run(demo.email);
+    }
+    if (demo.role === "trainer" && demo.specialty) {
+      await db.prepare(`
+        INSERT INTO trainer_profiles (user_id, rating, specialty)
+        SELECT id, 4.7, ? FROM users WHERE email = ? AND role = 'trainer'
+        ON CONFLICT (user_id) DO NOTHING
+      `).run(demo.specialty, demo.email);
+    }
+  }
 }

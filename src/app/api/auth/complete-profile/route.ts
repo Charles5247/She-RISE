@@ -29,13 +29,18 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
   const db = getDb();
   const hasAvatarUrl = Object.hasOwn(body as object, "avatarUrl");
-  await db.prepare(
-    `UPDATE users SET first_name = ?, last_name = ?, age = ?, lga = ?,
-       avatar_url = CASE WHEN ? THEN ? ELSE avatar_url END,
+  const profileFields = `first_name = ?, last_name = ?, age = ?, lga = ?,
        language = COALESCE(?, language), skill_category = COALESCE(?, skill_category),
-       onboarding_complete = 1, updated_at = NOW()
-     WHERE id = ?`
-  ).run(firstName, lastName || null, age || null, lga, hasAvatarUrl ? 1 : 0, avatarUrl || null, language || null, skillCategory || null, user.id);
+       onboarding_complete = 1, updated_at = NOW()`;
+  if (hasAvatarUrl) {
+    await db.prepare(
+      `UPDATE users SET ${profileFields}, avatar_url = ? WHERE id = ?`
+    ).run(firstName, lastName || null, age || null, lga, language || null, skillCategory || null, avatarUrl ?? null, user.id);
+  } else {
+    await db.prepare(
+      `UPDATE users SET ${profileFields} WHERE id = ?`
+    ).run(firstName, lastName || null, age || null, lga, language || null, skillCategory || null, user.id);
+  }
 
   return Response.json({ ok: true });
 });

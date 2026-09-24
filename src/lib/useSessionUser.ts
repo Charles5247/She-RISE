@@ -21,8 +21,9 @@ export interface SessionUserView {
   onboarding_complete: number;
 }
 
-export function useSessionUser(opts: { loginPath?: string } = {}) {
+export function useSessionUser(opts: { loginPath?: string; expectedRole?: SessionUserView["role"] } = {}) {
   const { loginPath = "/login" } = opts;
+  const expectedRole = opts.expectedRole ?? (loginPath.startsWith("/admin") ? "admin" : loginPath.startsWith("/trainer") ? "trainer" : loginPath.startsWith("/sponsor") ? "sponsor" : "participant");
   const router = useRouter();
   const [user, setUser] = useState<SessionUserView | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,6 +36,11 @@ export function useSessionUser(opts: { loginPath?: string } = {}) {
         router.replace(loginPath);
         return;
       }
+      if (res.data.user.role !== expectedRole) {
+        const destination = res.data.user.role === "admin" ? "/admin/overview" : res.data.user.role === "trainer" ? "/trainer/dashboard" : res.data.user.role === "sponsor" ? "/sponsor/dashboard" : "/feed";
+        router.replace(destination);
+        return;
+      }
       setUser(res.data.user);
       setLoading(false);
     });
@@ -42,7 +48,7 @@ export function useSessionUser(opts: { loginPath?: string } = {}) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [expectedRole, loginPath, router]);
 
   return { user, loading };
 }

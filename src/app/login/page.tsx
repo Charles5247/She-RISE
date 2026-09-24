@@ -19,10 +19,14 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const result = await postJson<{ onboardingComplete?: boolean }>("/api/auth/login", { identifier, password });
+    const result = await postJson<{ onboardingComplete?: boolean; role?: string }>("/api/auth/login", { identifier, password });
     setLoading(false);
     if (!result.ok) {
       setError(result.message);
+      return;
+    }
+    if (result.data?.role !== "participant") {
+      setError("This account uses the staff sign-in page.");
       return;
     }
     router.push("/feed");
@@ -84,29 +88,6 @@ export default function LoginPage() {
           </Link>
         </p>
 
-        <div
-          className="mt-4 rounded-lg p-3 flex items-center gap-3"
-          style={{ border: "2px solid var(--c-gold)", background: "var(--c-plum)", color: "var(--c-dark-text)" }}
-        >
-          <div
-            className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 text-xs font-bold"
-            style={{ background: "var(--c-gold)", color: "var(--c-plum)" }}
-          >
-            ✓
-          </div>
-          <div className="flex-1">
-            <div
-              className="text-xs font-bold uppercase"
-              style={{ fontFamily: "var(--font-display)", letterSpacing: "0.04em" }}
-            >
-              Trainer or sponsor?
-            </div>
-            <div className="text-[10px] opacity-70">Sign in to admin</div>
-          </div>
-          <Link href="/admin/login" className="text-xs underline">
-            →
-          </Link>
-        </div>
       </form>
     </main>
   );

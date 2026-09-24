@@ -1,0 +1,13 @@
+{
+  "at": "2026-09-24T18:15:52.051Z",
+  "results": [
+    "Existing account POST and PATCH work for both staff roles",
+    "trainer: authorization, duplicate concurrency, roster, soft removal, reassignment history passed",
+    "Sponsor completed-lesson count matches real lesson_progress",
+    "sponsor: authorization, duplicate concurrency, roster, soft removal, reassignment history passed",
+    "Admin directory counts and existing content GET passed",
+    "Existing account DELETE remains functional with relationship history",
+    "Existing course POST, PATCH, content GET and DELETE passed",
+    "RLS enabled and no anon/authenticated grants"
+  ]
+}

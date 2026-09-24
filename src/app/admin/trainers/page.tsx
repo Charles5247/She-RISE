@@ -1,173 +1,409 @@
 "use client";
-// Screen 32 — Trainers & sponsors. Left: trainer table w/ rating. Right:
-// sponsor cards (women sponsored, since year). Wired to GET /api/admin/trainers.
-import { useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AdminShell } from "@/components/AdminShell";
-import { Avatar } from "@/components/Avatar";
-import { SparkIcon } from "@/components/Icon";
+import { PortalCard, ParticipantIdentity } from "@/components/StaffPortal";
+import { PButton } from "@/components/PButton";
 import { LoadingState, ErrorState } from "@/components/States";
 import { useSessionUser } from "@/lib/useSessionUser";
-import { getJson } from "@/lib/apiClient";
-
-interface Trainer {
+import { deleteJson, getJson, patchJson, postJson } from "@/lib/apiClient";
+type Role = "trainer" | "sponsor";
+interface Account {
   id: string;
   first_name: string;
-  last_name: string;
-  lga: string;
-  specialty: string;
-  rating: number;
-  notes_written: number;
+  last_name: string | null;
+  email: string | null;
+  phone: string | null;
+  participant_count: number;
+  specialty?: string;
+  rating?: number;
+  notes_written?: number;
+  sponsor_since_year?: number;
 }
-interface Sponsor {
+interface Participant {
   id: string;
   first_name: string;
-  last_name: string;
-  women_sponsored_count: number;
-  sponsor_since_year: number;
+  lga: string | null;
+  skill_category: string | null;
 }
-interface TrainersData {
-  trainers: Trainer[];
-  sponsors: Sponsor[];
+interface Data {
+  trainers: Account[];
+  sponsors: Account[];
+  participants: Participant[];
 }
-
-export default function AdminTrainersPage() {
-  const { user, loading: userLoading } = useSessionUser({ loginPath: "/admin/login" });
-  const [data, setData] = useState<TrainersData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
+function AccountForm({
+  role,
+  account,
+  onSaved,
+  onCancel,
+}: {
+  role: Role;
+  account?: Account;
+  onSaved: () => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  async function save(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    const body = Object.fromEntries(new FormData(e.currentTarget));
+    const r = account
+      ? await patchJson(
+          "/api/admin/users?id=" + encodeURIComponent(account.id),
+          body,
+        )
+      : await postJson("/api/admin/users", { ...body, role });
+    if (r.ok) {
+      await onSaved();
+      onCancel();
+    } else setError(r.message);
+    setBusy(false);
+  }
+  return (
+    <form className="sr-portal-form" onSubmit={save}>
+      <h2>
+        {account ? "Edit" : "Create"} {role}
+      </h2>
+      <label>
+        First name
+        <input name="firstName" required defaultValue={account?.first_name} />
+      </label>
+      <label>
+        Last name
+        <input name="lastName" defaultValue={account?.last_name ?? ""} />
+      </label>
+      <label>
+        Email
+        <input name="email" type="email" defaultValue={account?.email ?? ""} />
+      </label>
+      <label>
+        Phone
+        <input name="phone" defaultValue={account?.phone ?? ""} />
+      </label>
+      <p>Provide an email address or phone number for sign-in.</p>
+      {!account && role === "trainer" && (
+        <label>
+          Specialty
+          <input name="specialty" />
+        </label>
+      )}
+      <label>
+        {account
+          ? "New password (leave blank to keep current)"
+          : "Temporary password"}
+        <input
+          name="password"
+          type="password"
+          minLength={8}
+          required={!account}
+          autoComplete="new-password"
+        />
+      </label>
+      {error && (
+        <p role="alert" className="sr-portal-error">
+          {error}
+        </p>
+      )}
+      <div className="sr-portal-actions">
+        <PButton
+          label={busy ? "Saving..." : "Save account"}
+          type="submit"
+          disabled={busy}
+          full={false}
+        />
+        <PButton
+          label="Cancel"
+          variant="ghost"
+          onClick={onCancel}
+          disabled={busy}
+          full={false}
+        />
+      </div>
+    </form>
+  );
+}
+function Assignments({
+  role,
+  account,
+  options,
+  onChanged,
+}: {
+  role: Role;
+  account: Account;
+  options: Participant[];
+  onChanged: () => Promise<void>;
+}) {
+  const [participants, setParticipants] = useState<Participant[] | null>(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const url =
+    "/api/admin/" +
+    (role === "trainer" ? "trainers/" : "sponsors/") +
+    encodeURIComponent(account.id) +
+    (role === "trainer" ? "/assignments" : "/sponsorships");
   const load = useCallback(async () => {
-    setError(null);
-    const res = await getJson<TrainersData>("/api/admin/trainers");
-    if (!res.ok || !res.data) {
-      setError(res.message);
-      return;
-    }
-    setData(res.data);
+    const r = await getJson<{
+      participants: Participant[];
+    }>(url);
+    if (r.ok && r.data) {
+      setParticipants(r.data.participants);
+      setError("");
+    } else setError(r.message);
+  }, [url]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- State updates follow the remote request.
+    void load();
+  }, [load]);
+  async function change(id: string, remove = false) {
+    setBusy(true);
+    setError("");
+    const r = remove
+      ? await deleteJson(url + "?participantId=" + encodeURIComponent(id))
+      : await postJson(url, { participantId: id });
+    if (r.ok) {
+      await load();
+      await onChanged();
+    } else setError(r.message);
+    setBusy(false);
+  }
+  const available = options.filter(
+    (p) => !participants?.some((a) => a.id === p.id),
+  );
+  return (
+    <section>
+      <h3>
+        {role === "trainer" ? "Assigned participants" : "Active sponsorships"}
+      </h3>
+      {error && <ErrorState message={error} onRetry={load} />}{" "}
+      {!participants && !error && (
+        <LoadingState label="Loading assignments..." />
+      )}
+      {participants && (
+        <>
+          {participants.length === 0 && <p>No active participants.</p>}
+          {participants.map((p) => (
+            <div className="sr-portal-row" key={p.id}>
+              <ParticipantIdentity
+                name={p.first_name}
+                detail={[p.lga, p.skill_category].filter(Boolean).join(" / ")}
+              />
+              <div className="sr-portal-actions">
+                <PButton
+                  label={"Remove " + p.first_name}
+                  variant="ghost"
+                  full={false}
+                  disabled={busy}
+                  onClick={() => change(p.id, true)}
+                />
+              </div>
+            </div>
+          ))}
+          <form
+            className="sr-portal-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void change(
+                String(new FormData(e.currentTarget).get("participantId")),
+              );
+            }}
+          >
+            <label>
+              Add participant
+              <select
+                name="participantId"
+                required
+                defaultValue=""
+                disabled={busy || !available.length}
+              >
+                <option value="" disabled>
+                  Select a participant
+                </option>
+                {available.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.first_name} / {p.lga ?? "LGA not set"} /{" "}
+                    {p.skill_category ?? "Skill not set"} / {p.id}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <PButton
+              type="submit"
+              label={busy ? "Saving..." : "Add participant"}
+              disabled={busy || !available.length}
+              full={false}
+            />
+          </form>
+        </>
+      )}
+    </section>
+  );
+}
+export default function AdminTrainersPage() {
+  const { user, loading } = useSessionUser({
+    loginPath: "/admin/login",
+    expectedRole: "admin",
+  });
+  const [data, setData] = useState<Data | null>(null);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [form, setForm] = useState<{
+    role: Role;
+    account?: Account;
+  } | null>(null);
+  const [selected, setSelected] = useState<{
+    role: Role;
+    account: Account;
+  } | null>(null);
+  const load = useCallback(async () => {
+    const r = await getJson<Data>("/api/admin/trainers");
+    if (r.ok && r.data) {
+      setData(r.data);
+      setError("");
+    } else setError(r.message);
   }, []);
 
   useEffect(() => {
-    if (!user) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- standard fetch-on-mount; load() sets state asynchronously after awaiting the API.
-    load();
+    if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- State updates follow the remote request.
+      void load();
+    }
   }, [user, load]);
-
-  if (userLoading) return <LoadingState label="Loading…" />;
-
+  async function remove(a: Account) {
+    if (
+      !window.confirm(
+        "Remove " +
+          a.first_name +
+          " and their account data? This cannot be undone.",
+      )
+    )
+      return;
+    setBusy(true);
+    const r = await deleteJson(
+      "/api/admin/users?id=" + encodeURIComponent(a.id),
+    );
+    if (r.ok) {
+      if (selected?.account.id === a.id) setSelected(null);
+      if (form?.account?.id === a.id) setForm(null);
+      setNotice("Account removed.");
+      await load();
+    } else setError(r.message);
+    setBusy(false);
+  }
+  if (loading || !user) return <LoadingState label="Loading..." />;
   return (
-    <AdminShell activeNav="trainers" title="Trainers & sponsors" userName={user?.first_name ?? "Admin"}>
-      {error && !data && <ErrorState message={error} onRetry={load} />}
-      {!data && !error && <LoadingState label="Loading…" />}
-
-      {data && (
-        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20 }}>
-          <div style={{ padding: 24, background: "#fff", border: "1px solid var(--c-line)", borderRadius: "var(--r-lg)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 22 }}>Trainers</div>
-              <button
-                style={{
-                  padding: "6px 12px",
-                  borderRadius: 4,
-                  background: "var(--c-magenta)",
-                  color: "#fff",
-                  fontSize: 11,
-                  fontWeight: 800,
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                  border: "none",
-                  cursor: "pointer",
-                }}
-              >
-                Invite
-              </button>
-            </div>
-            <div style={{ marginTop: 12 }}>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "2fr 1.4fr 1.4fr 70px 60px",
-                  padding: "10px 16px",
-                  fontSize: 10,
-                  letterSpacing: "0.14em",
-                  color: "var(--c-gold-deep)",
-                  textTransform: "uppercase",
-                  fontWeight: 700,
-                  background: "var(--c-plum)",
-                  borderRadius: "var(--r-md) var(--r-md) 0 0",
-                }}
-              >
-                <div style={{ color: "var(--c-gold)" }}>NAME</div>
-                <div style={{ color: "var(--c-gold)" }}>LGA</div>
-                <div style={{ color: "var(--c-gold)" }}>SPECIALTY</div>
-                <div style={{ color: "var(--c-gold)" }}>NOTES</div>
-                <div style={{ color: "var(--c-gold)" }}>★</div>
-              </div>
-              {data.trainers.map((t) => {
-                const fullName = `${t.first_name} ${t.last_name}`;
-                return (
-                  <div
-                    key={t.id}
-                    style={{ display: "grid", gridTemplateColumns: "2fr 1.4fr 1.4fr 70px 60px", padding: "12px 16px", borderTop: "1px solid var(--c-line)", alignItems: "center" }}
-                  >
-                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <Avatar name={fullName} size={26} palette="bold" ring="var(--c-gold)" />
-                      <div style={{ fontSize: 13, fontWeight: 700 }}>{fullName}</div>
-                    </div>
-                    <div style={{ fontSize: 12, color: "var(--c-ink-soft)" }}>{t.lga}</div>
-                    <div style={{ fontSize: 12 }}>{t.specialty}</div>
-                    <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 15, color: "var(--c-gold-deep)" }}>{t.notes_written}</div>
-                    <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                      <SparkIcon size={12} style={{ color: "var(--c-gold-deep)" }} />
-                      <div style={{ fontSize: 12, fontWeight: 700 }}>{Number(t.rating).toFixed(1)}</div>
-                    </div>
+    <AdminShell
+      activeNav="trainers"
+      title="Trainers & sponsors"
+      userName={user.first_name}
+    >
+      {error && <ErrorState message={error} onRetry={load} />}{" "}
+      {notice && <p role="status">{notice}</p>}
+      {!data && !error && <LoadingState label="Loading accounts..." />}
+      <div className="sr-portal-actions">
+        <PButton
+          label="Create trainer"
+          full={false}
+          onClick={() => setForm({ role: "trainer" })}
+        />
+        <PButton
+          label="Create sponsor"
+          full={false}
+          onClick={() => setForm({ role: "sponsor" })}
+        />
+      </div>
+      {form && (
+        <PortalCard>
+          <AccountForm
+            key={form.account?.id ?? form.role}
+            {...form}
+            onCancel={() => setForm(null)}
+            onSaved={async () => {
+              setNotice(
+                "Account saved. Share any temporary password securely.",
+              );
+              await load();
+            }}
+          />
+        </PortalCard>
+      )}
+      <div className="sr-portal-grid">
+        {data &&
+          (["trainer", "sponsor"] as const).map((role) => (
+            <PortalCard key={role}>
+              <h2>{role === "trainer" ? "Trainers" : "Sponsors"}</h2>
+              {data[role === "trainer" ? "trainers" : "sponsors"].length ===
+                0 && <p>No {role} accounts yet.</p>}
+              {data[role === "trainer" ? "trainers" : "sponsors"].map((a) => (
+                <article key={a.id} className="sr-portal-row">
+                  <ParticipantIdentity
+                    name={[a.first_name, a.last_name].filter(Boolean).join(" ")}
+                    detail={
+                      role === "trainer"
+                        ? [
+                            a.specialty,
+                            a.rating
+                              ? Number(a.rating).toFixed(1) + " rating"
+                              : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" / ")
+                        : a.sponsor_since_year
+                          ? "Sponsor since " + a.sponsor_since_year
+                          : "Sponsor"
+                    }
+                  />
+                  <p>
+                    {a.participant_count} active participants
+                    {role === "trainer"
+                      ? " / " + a.notes_written + " notes"
+                      : ""}
+                  </p>
+                  <div className="sr-portal-actions">
+                    <PButton
+                      label="Manage participants"
+                      full={false}
+                      onClick={() => setSelected({ role, account: a })}
+                    />
+                    <PButton
+                      label="Edit"
+                      variant="ghost"
+                      full={false}
+                      onClick={() => setForm({ role, account: a })}
+                    />
+                    <PButton
+                      label="Remove account"
+                      variant="ghost"
+                      full={false}
+                      disabled={busy}
+                      onClick={() => remove(a)}
+                    />
                   </div>
-                );
-              })}
-              {data.trainers.length === 0 && <div style={{ padding: 24, textAlign: "center", color: "var(--c-ink-soft)", fontSize: 13 }}>No trainers yet.</div>}
-            </div>
+                </article>
+              ))}
+            </PortalCard>
+          ))}
+      </div>
+      {selected && data && (
+        <PortalCard>
+          <h2>Participants / {selected.account.first_name}</h2>
+          <Assignments
+            key={selected.account.id}
+            {...selected}
+            options={data.participants}
+            onChanged={load}
+          />
+          <div className="sr-portal-actions">
+            <PButton
+              label="Close participants"
+              variant="ghost"
+              full={false}
+              onClick={() => setSelected(null)}
+            />
           </div>
-
-          <div style={{ padding: 24, background: "#fff", border: "1px solid var(--c-line)", borderRadius: "var(--r-lg)" }}>
-            <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 22 }}>Sponsors</div>
-            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-              {data.sponsors.map((s) => {
-                const fullName = `${s.first_name} ${s.last_name}`;
-                return (
-                  <div key={s.id} style={{ padding: "12px 14px", borderRadius: 6, background: "var(--c-cream)", border: "1px solid var(--c-line)", display: "flex", gap: 12, alignItems: "center" }}>
-                    <div
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 4,
-                        background: "var(--c-gold)",
-                        color: "var(--c-plum)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontFamily: "var(--font-display)",
-                        fontWeight: 800,
-                        fontSize: 18,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {s.first_name[0]}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700 }}>{fullName}</div>
-                      <div style={{ fontSize: 9, color: "var(--c-ink-soft)", marginTop: 2, letterSpacing: "0.14em", fontWeight: 700 }}>
-                        SPONSOR · SINCE {s.sponsor_since_year}
-                      </div>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 20, color: "var(--c-gold-deep)" }}>{s.women_sponsored_count.toLocaleString()}</div>
-                      <div style={{ fontSize: 9, letterSpacing: "0.14em", color: "var(--c-ink-soft)" }}>WOMEN</div>
-                    </div>
-                  </div>
-                );
-              })}
-              {data.sponsors.length === 0 && <div style={{ padding: 24, textAlign: "center", color: "var(--c-ink-soft)", fontSize: 13 }}>No sponsors yet.</div>}
-            </div>
-          </div>
-        </div>
+        </PortalCard>
       )}
     </AdminShell>
   );

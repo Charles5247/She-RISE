@@ -39,14 +39,7 @@ export default function LoginPage() {
         <PButton type="submit" size="lg" disabled={loading} label={loading ? "Logging in..." : "Log in"} />
         <p style={{ textAlign: "center", fontSize: 14 }}>New here? <Link href="/signup" className="sr-auth-link">Create account</Link></p>
       </form>
-      <Link href="/admin/login" className="sr-auth-staff">
-        <span aria-hidden="true" style={{ display: "grid", placeItems: "center", width: 32, height: 32, borderRadius: 6, background: "var(--c-gold)", color: "var(--c-plum)", fontWeight: 800 }}>SR</span>
-        <span style={{ flex: 1 }}>
-          <span style={{ display: "block", fontFamily: "var(--font-display)", fontSize: 14, fontWeight: 700, textTransform: "uppercase" }}>Trainer or sponsor?</span>
-          <span style={{ fontSize: 14, color: "var(--c-dark-text-soft)" }}>Sign in to admin</span>
-        </span>
-        <span aria-hidden="true">&rarr;</span>
-      </Link>
+      <p className="sr-staff-signin"><Link href="/admin/login">Staff sign in</Link></p>
     </AuthShell>
   );
 }

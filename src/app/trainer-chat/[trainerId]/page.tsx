@@ -2,9 +2,15 @@
 // Screen 22 — 1:1 trainer DM. Message bubbles (magenta for me, white for
 // them), typing composer. Trainer notes stay separate/private — never
 // surfaced here (see API comment on the route).
-import { use, useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Avatar, trainerBadge, ChevronLeftIcon, FormField, PButton } from "@/components";
+import { Suspense, use, useCallback, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Avatar,
+  trainerBadge,
+  ChevronLeftIcon,
+  FormField,
+  PButton,
+} from "@/components";
 import { LoadingState, ErrorState } from "@/components/States";
 import { getJson, postJson } from "@/lib/apiClient";
 import { useSessionUser } from "@/lib/useSessionUser";
@@ -16,10 +22,19 @@ interface DmMessage {
   created_at: string;
 }
 
-export default function TrainerChatPage({ params }: { params: Promise<{ trainerId: string }> }) {
+function TrainerChatPage({
+  params,
+}: {
+  params: Promise<{ trainerId: string }>;
+}) {
   const { trainerId } = use(params);
   const router = useRouter();
-  const { user } = useSessionUser();
+  const participantId = useSearchParams().get("participantId");
+  const [partnerName, setPartnerName] = useState("Conversation");
+  const { user } = useSessionUser({
+    expectedRole: participantId ? "trainer" : "participant",
+    loginPath: participantId ? "/admin/login" : "/login",
+  });
   const [messages, setMessages] = useState<DmMessage[] | null>(null);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -28,13 +43,16 @@ export default function TrainerChatPage({ params }: { params: Promise<{ trainerI
 
   const load = useCallback(async () => {
     setError(null);
-    const res = await getJson<{ messages: DmMessage[] }>(`/api/trainer/chat/${trainerId}`);
+    const res = await getJson<{ messages: DmMessage[]; partnerName: string }>(
+      `/api/trainer/chat/${trainerId}?participantId=${encodeURIComponent(participantId ?? "")}`,
+    );
     if (!res.ok || !res.data) {
       setError(res.message);
       return;
     }
     setMessages(res.data.messages);
-  }, [trainerId]);
+    setPartnerName(res.data.partnerName);
+  }, [trainerId, participantId]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- standard fetch-on-mount; load() sets state asynchronously after awaiting the API.
@@ -48,7 +66,10 @@ export default function TrainerChatPage({ params }: { params: Promise<{ trainerI
   async function send() {
     if (!draft.trim()) return;
     setSending(true);
-    const res = await postJson(`/api/trainer/chat/${trainerId}`, { body: draft.trim() });
+    const res = await postJson(`/api/trainer/chat/${trainerId}`, {
+      body: draft.trim(),
+      participantId,
+    });
     setSending(false);
     if (!res.ok) {
       setError(res.message);
@@ -62,7 +83,14 @@ export default function TrainerChatPage({ params }: { params: Promise<{ trainerI
   if (!messages) return <LoadingState label="Loading conversation…" />;
 
   return (
-    <main style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--c-off)" }}>
+    <main
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        background: "var(--c-off)",
+      }}
+    >
       <header
         style={{
           display: "flex",
@@ -72,28 +100,68 @@ export default function TrainerChatPage({ params }: { params: Promise<{ trainerI
           borderBottom: "1px solid var(--c-line)",
         }}
       >
-        <button onClick={() => router.back()} aria-label="Back" style={{ color: "var(--c-ink)", width: 44, height: 44 }}>
+        <button
+          onClick={() => router.back()}
+          aria-label="Back"
+          style={{ color: "var(--c-ink)", width: 44, height: 44 }}
+        >
           <ChevronLeftIcon size={22} />
         </button>
-        <Avatar name="Trainer" size={32} ring="var(--c-gold)" badge={trainerBadge()} />
+        <Avatar
+          name={partnerName}
+          size={32}
+          ring="var(--c-gold)"
+          badge={user?.role === "trainer" ? undefined : trainerBadge()}
+        />
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700 }}>Trainer chat</div>
-          <div className="sr-label" style={{ fontSize: 9, color: "var(--c-gold-deep)", fontWeight: 800 }}>
-            Trainer · Verified
+          <div style={{ fontSize: 14, fontWeight: 700 }}>{partnerName}</div>
+          <div
+            className="sr-label"
+            style={{
+              fontSize: 9,
+              color: "var(--c-gold-deep)",
+              fontWeight: 800,
+            }}
+          >
+            {user?.role === "trainer"
+              ? "Participant conversation"
+              : "Trainer / Verified"}
           </div>
         </div>
       </header>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: 16,
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+        }}
+      >
         {messages.length === 0 && (
-          <div style={{ textAlign: "center", color: "var(--c-ink-soft)", fontSize: 12, marginTop: 40 }}>
-            Say hello — your trainer usually replies within a day.
+          <div
+            style={{
+              textAlign: "center",
+              color: "var(--c-ink-soft)",
+              fontSize: 12,
+              marginTop: 40,
+            }}
+          >
+            Say hello to start your conversation.
           </div>
         )}
         {messages.map((m) => {
           const mine = m.sender_id === user?.id;
           return (
-            <div key={m.id} style={{ display: "flex", justifyContent: mine ? "flex-end" : "flex-start" }}>
+            <div
+              key={m.id}
+              style={{
+                display: "flex",
+                justifyContent: mine ? "flex-end" : "flex-start",
+              }}
+            >
               <div
                 style={{
                   maxWidth: "75%",
@@ -113,19 +181,51 @@ export default function TrainerChatPage({ params }: { params: Promise<{ trainerI
         <div ref={bottomRef} />
       </div>
 
-      <div style={{ padding: 12, borderTop: "1px solid var(--c-line)", display: "flex", gap: 8, alignItems: "flex-start" }}>
+      <div
+        style={{
+          padding: 12,
+          borderTop: "1px solid var(--c-line)",
+          display: "flex",
+          gap: 8,
+          alignItems: "flex-start",
+        }}
+      >
         <div style={{ flex: 1 }}>
-          <FormField value={draft} onChange={setDraft} placeholder="Write a message…" />
+          <FormField
+            value={draft}
+            onChange={setDraft}
+            placeholder="Write a message…"
+          />
         </div>
         <div style={{ width: 84 }}>
-          <PButton label={sending ? "…" : "Send"} onClick={send} disabled={sending} size="sm" />
+          <PButton
+            label={sending ? "…" : "Send"}
+            onClick={send}
+            disabled={sending}
+            size="sm"
+          />
         </div>
       </div>
       {error && (
-        <p className="text-xs text-center pb-2" style={{ color: "var(--c-danger)" }}>
+        <p
+          className="text-xs text-center pb-2"
+          style={{ color: "var(--c-danger)" }}
+        >
           {error}
         </p>
       )}
     </main>
+  );
+}
+
+export default function Page({
+  params,
+}: {
+  params: Promise<{ trainerId: string }>;
+}) {
+  return (
+    <Suspense fallback={<LoadingState label="Loading conversation?" />}>
+      <TrainerChatPage params={params} />
+    </Suspense>
   );
 }

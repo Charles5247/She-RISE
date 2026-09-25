@@ -56,9 +56,9 @@ Never expose a `service_role` or secret key through a `NEXT_PUBLIC_*` variable.
 npm run dev
 ```
 
-Open http://localhost:3000. Demo data seeds automatically on first request.
+Open http://localhost:3001. SheRISE development uses port 3001 to leave port 3000 free for other apps. For a production build, use `npm run start -- --port 3001` (or your hosting provider's `PORT` setting). Demo data seeds automatically on first request.
 If the browser console reports a signup API 404 after code changes, stop any
-older dev server still using port 3000 and restart `npm run dev` from this
+older SheRISE dev server still using port 3001 and restart `npm run dev` from this
 checkout. The `/api/auth/signup` route is part of the project. The hydration
 warning in the supplied log shows extensions injecting attributes and
 wrapping the signup input before React starts; check again in a private

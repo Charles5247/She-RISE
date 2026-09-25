@@ -14,7 +14,7 @@ const prefix = "qa_" + crypto.randomBytes(6).toString("hex");
 const ids = [];
 const results = [];
 let courseId;
-const base = process.env.TEST_BASE_URL || "http://localhost:3000";
+const base = process.env.TEST_BASE_URL || "http://localhost:3001";
 async function fixture(role) {
   const id = prefix + "_" + role;
   ids.push(id);

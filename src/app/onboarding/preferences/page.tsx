@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 // Screen 06 — Language + Skill picker. Radio cards for language, 6-tile grid
 // for skill category. Final onboarding step -> feed.
 import { useState } from "react";
@@ -9,6 +10,7 @@ import { postJson } from "@/lib/apiClient";
 const LANGUAGES = [
   { code: "en", label: "English" },
   { code: "ha", label: "Hausa" },
+  { code: "pcm", label: "Pidgin English" },
   { code: "yo", label: "Yorùbá" },
   { code: "ig", label: "Ìgbò" },
 ];
@@ -57,9 +59,7 @@ export default function PreferencesPage() {
     <AuthShell title="Choose your path" subtitle="Pick a language, then the skill you'd like to learn.">
       <div className="flex flex-col gap-6">
         <div>
-          <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 8 }}>
-            Language
-          </div>
+          <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 8 }}><T text={"Language"} />{" "}</div>
           <div className="flex flex-col gap-2">
             {LANGUAGES.map((l) => (
               <button

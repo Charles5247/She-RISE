@@ -75,7 +75,7 @@ export default function ProfilePage() {
                 {s.value}
               </div>
               <div className="sr-label" style={{ fontSize: 9, marginTop: 4, opacity: 0.75 }}>
-                {s.label}
+                <T text={s.label} />
               </div>
             </div>
           ))}
@@ -152,7 +152,7 @@ export default function ProfilePage() {
             borderRadius: "var(--r-lg)",
           }}
         >
-          <div style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>Help &amp; safety</div>
+          <div style={{ flex: 1, fontSize: 13, fontWeight: 600 }}><T text={"Help & safety"} /></div>
           <ChevronRightIcon size={16} style={{ color: "var(--c-ink-soft)" }} />
         </Link>
       </div>

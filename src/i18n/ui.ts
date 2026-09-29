@@ -1,6 +1,45 @@
 // UI copy only. Participant posts, messages and course files keep their authors' language.
 // Each entry is English, Hausa, Yoruba, Nigerian Pidgin.
 export const UI_STRINGS: [string, string, string, string][] = [
+  ["New post", "Sabon saƙo", "Àtẹ̀jáde tuntun", "New post"],
+  ["Tag a milestone", "Zaɓi irin nasarar", "Yan àṣeyọrí kan", "Choose the kind of win"],
+  ["Share your win, in your own words…", "Raba nasararki da kalmominki…", "Pín àṣeyọrí rẹ ní ọ̀rọ̀ tirẹ…", "Share your win with your own words…"],
+  ["Posting…", "Ana wallafawa…", "Ń tẹ̀ jáde…", "E dey post…"],
+  ["Write something before posting.", "Rubuta wani abu kafin wallafawa.", "Kọ nǹkan kan kí o tó tẹ̀ jáde.", "Write something before you post."],
+  ["Posts stay inside the SheRISE community.", "Saƙonni suna cikin al'ummar SheRISE kawai.", "Àwọn àtẹ̀jáde wà nínú àwùjọ SheRISE nìkan.", "Posts dey stay inside SheRISE community."],
+  ["No milestone", "Babu nasara da aka zaɓa", "Kò sí àṣeyọrí", "No milestone"],
+  ["First income", "Kuɗin shiga na farko", "Owó àkọ́kọ́", "First money"],
+  ["Week complete", "An kammala mako", "Ọ̀sẹ̀ ti parí", "Week don finish"],
+  ["New skill", "Sabuwar ƙwarewa", "Òye tuntun", "New skill"],
+  ["Help & safety", "Taimako da tsaro", "Ìrànlọ́wọ́ àti ààbò", "Help and safety"],
+  ["In an emergency", "A lokacin gaggawa", "Nígbà pàjáwìrì", "For emergency"],
+  ["You're not alone. Help is one tap away.", "Ba ke kaɗai ba ce. Danna don samun taimako.", "Ìwọ kò dá wà. Tẹ̀ láti rí ìrànlọ́wọ́.", "You no dey alone. Tap to get help."],
+  ["Call emergency line", "Kira lambar gaggawa", "Pe nọ́mbà pàjáwìrì", "Call emergency line"],
+  ["Panic hide", "Ɓoye shafi da sauri", "Fi ojúewé pamọ́ lẹ́sẹ̀kẹsẹ̀", "Hide app quick"],
+  ["Talk to a trainer", "Yi magana da mai koyarwa", "Bá olùkọ́ sọ̀rọ̀", "Talk to your trainer"],
+  ["Lesson complete!", "An kammala darasi!", "O ti parí ẹ̀kọ́!", "Lesson don finish!"],
+  ["Go to feed", "Je zuwa al'umma", "Lọ sí àwùjọ", "Go to community"],
+  ["Steps", "Matakai", "Àwọn ìgbésẹ̀", "Steps"],
+  ["✓ Completed", "✓ An kammala", "✓ Ó ti parí", "✓ Don finish"],
+  ["Milestone", "Nasara", "Àṣeyọrí", "Milestone"],
+  ["Verified by", "Wanda ya tabbatar", "Ẹni tó jẹ́rìí sí i", "Verified by"],
+  ["Trainer · Verified", "Mai koyarwa · An tabbatar", "Olùkọ́ · A ti jẹ́rìí", "Trainer · Verified"],
+  ["% complete", "% an kammala", "% ti parí", "% don finish"],
+  ["View pathway", "Duba hanyar koyo", "Wo ọ̀nà ẹ̀kọ́", "See learning path"],
+  ["Other pathways", "Sauran hanyoyin koyo", "Àwọn ọ̀nà ẹ̀kọ́ mìíràn", "Other learning paths"],
+  ["State", "Jiha", "Ìpínlẹ̀", "State"],
+  ["Select state", "Zaɓi jiha", "Yan ìpínlẹ̀", "Choose state"],
+  ["Local Government Area", "Ƙaramar hukuma", "Ìjọba ìbílẹ̀", "Local government"],
+  ["Say hello to start your conversation.", "Ki ce sannu don fara hirarki.", "Sọ pé pẹ̀lẹ́ láti bẹ̀rẹ̀ ìjíròrò.", "Say hello to start your chat."],
+  ["Couldn't load this", "Ba a iya loda wannan ba", "A kò lè gbé èyí wọlé", "This one no load"],
+  ["Your unsent posts and drafts stay safe on this device.", "Saƙonnin da ba ki aika ba suna nan a wannan na'ura.", "Àwọn àtẹ̀jáde tí o kò tíì fi ránṣẹ́ wà lórí ẹ̀rọ yìí.", "Posts wey you never send dey safe for this device."],
+  ["Data & downloads", "Bayanan intanet da saukewa", "Dátà àti gbígbà sílẹ̀", "Data and downloads"],
+  ["Wifi-only downloads", "Sauke abubuwa da Wi-Fi kawai", "Gbà sílẹ̀ pẹ̀lú Wi-Fi nìkan", "Download only with Wi-Fi"],
+  ["Always available via long-press", "Ana iya amfani da shi ta dogon dannawa", "Tẹ̀ mọ́lẹ̀ láti lò ó", "Press and hold to use am"],
+  ["{name} sent you an assignment: {title}", "{name} ta aika miki aiki: {title}", "{name} fi iṣẹ́ ránṣẹ́ sí ọ: {title}", "{name} send you assignment: {title}"],
+  ["{name} sent you a message", "{name} ta aika miki saƙo", "{name} fi ìfiránṣẹ́ ránṣẹ́ sí ọ", "{name} send you message"],
+  ["New course added: {title}", "An ƙara sabon kwas: {title}", "A ti fi ẹ̀kọ́ tuntun kún un: {title}", "New course don land: {title}"],
+  ["of {count} available lessons", "daga cikin darussa {count}", "nínú ẹ̀kọ́ {count} tó wà", "out of {count} lessons"],
   ["Home", "Gida", "Ilé", "Home"],
   ["Community", "Al'umma", "Àwùjọ", "Our community"],
   ["Learn", "Koyo", "Kọ́ ẹ̀kọ́", "Learn"],
@@ -130,4 +169,17 @@ export const UI_STRINGS: [string, string, string, string][] = [
   ["Unread", "Ba a karanta ba", "O kò tíì kà", "Never read"],
 ];
 const maps = Object.fromEntries(["ha", "yo", "pcm"].map((locale, i) => [locale, Object.fromEntries(UI_STRINGS.map(row => [row[0], row[i + 1]]))]));
-export function translateUi(locale: string, text: string): string { return maps[locale]?.[text] ?? text; }
+export function translateUi(locale: string, text: string): string {
+  if (maps[locale]?.[text]) return maps[locale][text];
+  const patterns: [RegExp, string, string[]][] = [
+    [/^(.+) sent you an assignment: (.+)$/, "{name} sent you an assignment: {title}", ["name", "title"]],
+    [/^(.+) sent you a message$/, "{name} sent you a message", ["name"]],
+    [/^New course added: (.+)$/, "New course added: {title}", ["title"]],
+    [/^of (\d+) available lessons$/, "of {count} available lessons", ["count"]],
+  ];
+  for (const [pattern, key, fields] of patterns) {
+    const match = text.match(pattern);
+    if (match && maps[locale]?.[key]) return fields.reduce((value, field, i) => value.replace(`{${field}}`, match[i + 1]), maps[locale][key]);
+  }
+  return text;
+}

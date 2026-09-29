@@ -50,11 +50,9 @@ export function ErrorState({
         <AlertIcon size={26} />
       </div>
       <div>
-        <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 800, color: "var(--c-ink)" }}>
-          Couldn&apos;t load this
-        </div>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 800, color: "var(--c-ink)" }}><T text={"Couldn't load this"} />{" "}</div>
         <div style={{ marginTop: 4, fontSize: 13, color: "var(--c-ink-soft)", maxWidth: 280 }}>{typeof message === "string" ? <T text={message} /> : message}</div>
-        <div style={{ marginTop: 4, fontSize: 11, color: "var(--c-ink-soft)" }}>Your unsent posts and drafts stay safe on this device.</div>
+        <div style={{ marginTop: 4, fontSize: 11, color: "var(--c-ink-soft)" }}><T text={"Your unsent posts and drafts stay safe on this device."} /></div>
       </div>
       {onRetry && (
         <div style={{ width: 160 }}>

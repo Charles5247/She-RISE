@@ -154,9 +154,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
                     <span
                       className="sr-label"
                       style={{ fontSize: 8, background: "var(--c-gold)", color: "var(--c-plum)", padding: "2px 6px", borderRadius: "var(--r-pill)", fontWeight: 800 }}
-                    >
-                      Trainer · Verified
-                    </span>
+                    ><T text={"Trainer · Verified"} />{" "}</span>
                   )}
                 </div>
                 <div style={{ fontSize: 13, marginTop: 2 }}>{c.body}</div>

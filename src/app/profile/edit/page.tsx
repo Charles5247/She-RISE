@@ -102,9 +102,7 @@ export default function EditProfilePage() {
         <FormField label="Family name (private)" value={lastName} onChange={setLastName} />
         <FormField label="Bio" value={bio} onChange={setBio} multiline rows={3} maxLength={160} />
         <div>
-          <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 6 }}>
-            State
-          </div>
+          <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 6 }}><T text={"State"} />{" "}</div>
           <select
             value={stateName}
             onChange={(e) => {
@@ -117,7 +115,7 @@ export default function EditProfilePage() {
             style={{ borderColor: "var(--c-line)", color: "var(--c-ink)" }}
             required
           >
-            <option value="">Select state</option>
+            <option value=""><T text={"Select state"} /></option>
             {NIGERIA_STATES.map((state) => (
               <option key={state.name} value={state.name}>
                 {state.name}
@@ -126,9 +124,7 @@ export default function EditProfilePage() {
           </select>
         </div>
         <div>
-          <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 6 }}>
-            Local Government Area
-          </div>
+          <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 6 }}><T text={"Local Government Area"} />{" "}</div>
           <select
             value={lga}
             onChange={(e) => setLga(e.target.value)}

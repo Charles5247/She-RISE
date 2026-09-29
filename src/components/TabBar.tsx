@@ -42,35 +42,11 @@ export function TabBar() {
       {TABS.map((t) => {
         const isActive = pathname === t.href || (t.id === "home" && pathname === "/");
         const Icon = t.icon;
-        if (t.id === "plus") {
-          return (
-            <button
-              key={t.id}
-              aria-label="Create post"
-              onClick={() => router.push(t.href)}
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 24,
-                background: "var(--c-magenta)",
-                color: "#fff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 6px 20px -6px var(--c-magenta)",
-                marginTop: -6,
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              <Icon size={24} />
-            </button>
-          );
-        }
         return (
           <Link
             key={t.id}
             href={t.href}
+            aria-current={isActive ? "page" : undefined}
             aria-current={isActive ? "page" : undefined}
             style={{
               display: "flex",

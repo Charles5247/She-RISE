@@ -106,6 +106,7 @@ export async function POST(req: NextRequest) {
     milestoneAmount?: number | null;
   };
 
+  if (crosspostFb || crosspostLinkedin) return Response.json({ message: "External sharing is disabled for this private community." }, { status: 403 });
   if (!text || !text.trim()) {
     return Response.json({ code: "BAD_REQUEST", message: "Post body cannot be empty." }, { status: 400 });
   }

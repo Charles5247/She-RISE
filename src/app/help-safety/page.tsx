@@ -42,7 +42,7 @@ export default function HelpSafetyPage() {
         <button onClick={() => router.back()} aria-label="Back" style={{ color: "var(--c-ink)", width: 44, height: 44 }}>
           <ChevronLeftIcon size={22} />
         </button>
-        <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 16 }}>Help &amp; safety</div>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 16 }}><T text={"Help & safety"} /></div>
       </header>
 
       <div style={{ padding: 16 }}>
@@ -55,12 +55,8 @@ export default function HelpSafetyPage() {
             marginBottom: 20,
           }}
         >
-          <div className="sr-label" style={{ fontSize: 10, opacity: 0.85, marginBottom: 6 }}>
-            In an emergency
-          </div>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 800, marginBottom: 10 }}>
-            You&apos;re not alone. Help is one tap away.
-          </div>
+          <div className="sr-label" style={{ fontSize: 10, opacity: 0.85, marginBottom: 6 }}><T text={"In an emergency"} />{" "}</div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 800, marginBottom: 10 }}><T text={"You're not alone. Help is one tap away."} />{" "}</div>
           <a
             href="tel:112"
             className="sr-label"
@@ -76,8 +72,7 @@ export default function HelpSafetyPage() {
               fontSize: 12,
             }}
           >
-            <PhoneCallIcon size={16} /> Call emergency line
-          </a>
+            <PhoneCallIcon size={16} />{" "}<T text={"Call emergency line"} />{" "}</a>
         </div>
 
         <div
@@ -93,7 +88,7 @@ export default function HelpSafetyPage() {
         >
           <LockIcon size={20} style={{ color: "var(--c-gold-deep)" }} />
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Panic hide</div>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}><T text={"Panic hide"} /></div>
             <div style={{ fontSize: 12, color: "var(--c-ink-soft)", lineHeight: 1.5 }}>
               Long-press the home indicator anytime to instantly hide SheRISE
               behind a neutral calculator screen. No branding, no trace in
@@ -104,9 +99,7 @@ export default function HelpSafetyPage() {
           </div>
         </div>
 
-        <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 10 }}>
-          Talk to a trainer
-        </div>
+        <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 10 }}><T text={"Talk to a trainer"} />{" "}</div>
         {trainers === null ? (
           <LoadingState label="Loading trainers…" />
         ) : (

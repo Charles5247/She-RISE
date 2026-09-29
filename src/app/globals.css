@@ -911,3 +911,9 @@ body {
   .sr-community-page { border: 0; }
   .sr-community-page header > div:last-child { gap: 6px !important; }
 }
+.sr-simple-page { max-width: 840px; margin: auto; padding: 24px 20px 120px; display: grid; gap: 20px; }
+.sr-simple-page header { display: flex; align-items: center; gap: 24px; }
+.sr-simple-page h1 { font: 800 26px var(--font-display); }
+.sr-simple-page header a { min-height: 44px; display: inline-flex; align-items: center; }
+.sr-setting-row { display: flex; justify-content: space-between; gap: 16px; align-items: center; min-height: 48px; font-size: 15px; }
+.sr-setting-row input { width: 24px; height: 24px; accent-color: var(--c-magenta); }

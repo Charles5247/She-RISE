@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 // Screen 18 — Milestone detail. Plum hero card with amount + verifier,
 // 3-cell stats grid, story quote.
 import { use, useCallback, useEffect, useState } from "react";
@@ -60,7 +61,7 @@ export default function MilestoneDetailPage({ params }: { params: Promise<{ id: 
         <button onClick={() => router.back()} aria-label="Back" style={{ color: "var(--c-ink)", width: 44, height: 44 }}>
           <ChevronLeftIcon size={22} />
         </button>
-        <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 16 }}>Milestone</div>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 16 }}><T text={"Milestone"} /></div>
       </header>
 
       <div
@@ -109,8 +110,8 @@ export default function MilestoneDetailPage({ params }: { params: Promise<{ id: 
         <div style={{ margin: "0 16px", display: "flex", alignItems: "center", gap: 10 }}>
           <Avatar name={milestone.verifier.firstName} size={36} ring={milestone.verifier.isVerifiedTrainer ? "var(--c-gold)" : null} badge={milestone.verifier.isVerifiedTrainer ? trainerBadge() : null} />
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700 }}>Verified by {milestone.verifier.firstName}</div>
-            {milestone.verifier.isVerifiedTrainer && <div style={{ fontSize: 11, color: "var(--c-ink-soft)" }}>Trainer · Verified</div>}
+            <div style={{ fontSize: 13, fontWeight: 700 }}><T text={"Verified by"} />{" "}{milestone.verifier.firstName}</div>
+            {milestone.verifier.isVerifiedTrainer && <div style={{ fontSize: 11, color: "var(--c-ink-soft)" }}><T text={"Trainer · Verified"} /></div>}
           </div>
         </div>
       )}

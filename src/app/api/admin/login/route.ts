@@ -11,15 +11,16 @@ import { seedIfEmpty } from "@/lib/seed";
 export const POST = withErrorHandling(async (req: NextRequest) => {
   // Login may be the first request against a fresh local database.
   await seedIfEmpty();
-  const { identifier, password } = (await req.json().catch(() => ({}))) as { identifier?: string; password?: string };
-  if (!identifier || !password) {
+  const { identifier: rawIdentifier, password } = (await req.json().catch(() => ({}))) as { identifier?: string; password?: string };
+  const identifier = typeof rawIdentifier === "string" ? rawIdentifier.trim() : "";
+  if (!identifier || typeof password !== "string" || !password) {
     return Response.json({ code: "BAD_REQUEST", message: "Email and password required." }, { status: 400 });
   }
   const isEmail = identifier.includes("@");
   const db = getDb();
   const user = (await db
-    .prepare(`SELECT id, role, password_hash FROM users WHERE ${isEmail ? "email" : "phone"} = ?`)
-    .get(identifier)) as { id: string; role: string; password_hash: string } | undefined;
+    .prepare(`SELECT id, role, password_hash FROM users WHERE ${isEmail ? "LOWER(email)" : "phone"} = ?`)
+    .get(isEmail ? identifier.toLowerCase() : identifier)) as { id: string; role: string; password_hash: string } | undefined;
 
   if (!user || !verifyPassword(password, user.password_hash)) {
     return Response.json({ code: "INVALID_CREDENTIALS", message: "Incorrect email or password." }, { status: 401 });

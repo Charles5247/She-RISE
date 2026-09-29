@@ -41,7 +41,7 @@ function NotificationRow({ n, onClick }: { n: NotificationItem; onClick: () => v
         badge={{ bg: "var(--c-magenta)", icon: <span style={{ color: "#fff" }}>{kindIcon(n.kind)}</span> }}
       />
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 13, color: "var(--c-ink)" }}>{n.body}</div>
+        <div style={{ fontSize: 13, color: "var(--c-ink)" }}><T text={n.body} /></div>
         <div style={{ fontSize: 11, color: "var(--c-ink-soft)", marginTop: 2 }}>{timeAgo(n.createdAt)} ago</div>
       </div>
       {!n.read && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--c-magenta)" }} />}

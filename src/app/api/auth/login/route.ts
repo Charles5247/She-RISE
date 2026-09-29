@@ -13,16 +13,17 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   // demo accounts exist before looking up the supplied identifier.
   await seedIfEmpty();
   const body = await req.json().catch(() => null);
-  const { identifier, password } = (body || {}) as { identifier?: string; password?: string };
-  if (!identifier || !password) {
+  const { identifier: rawIdentifier, password } = (body || {}) as { identifier?: string; password?: string };
+  const identifier = typeof rawIdentifier === "string" ? rawIdentifier.trim() : "";
+  if (!identifier || typeof password !== "string" || !password) {
     return Response.json({ code: "BAD_REQUEST", message: "Identifier and password required." }, { status: 400 });
   }
 
   const isEmail = identifier.includes("@");
   const db = getDb();
   const user = (await db
-    .prepare(`SELECT id, role, password_hash, onboarding_complete FROM users WHERE ${isEmail ? "email" : "phone"} = ?`)
-    .get(identifier)) as { id: string; role: string; password_hash: string; onboarding_complete: number } | undefined;
+    .prepare(`SELECT id, role, password_hash, onboarding_complete FROM users WHERE ${isEmail ? "LOWER(email)" : "phone"} = ?`)
+    .get(isEmail ? identifier.toLowerCase() : identifier)) as { id: string; role: string; password_hash: string; onboarding_complete: number } | undefined;
 
   if (!user || !verifyPassword(password, user.password_hash)) {
     return Response.json({ code: "INVALID_CREDENTIALS", message: "Incorrect phone/email or password." }, { status: 401 });

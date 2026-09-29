@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 
 // Screen 05 - Create profile. Name, state/LGA, and profile photo.
 // First name is public; last name stays private per Design Principle 01.
@@ -57,9 +58,7 @@ export default function CreateProfilePage() {
         <FormField label="Family name (private)" value={lastName} onChange={setLastName} placeholder="Okafor" hint="Only trainers and staff can see this." />
         <FormField label="Age" value={age} onChange={setAge} type="number" placeholder="27" />
         <div>
-          <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 6 }}>
-            State
-          </div>
+          <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 6 }}><T text={"State"} />{" "}</div>
           <select
             value={stateName}
             onChange={(e) => {
@@ -72,7 +71,7 @@ export default function CreateProfilePage() {
             style={{ borderColor: "var(--c-line)", color: "var(--c-ink)" }}
             required
           >
-            <option value="">Select state</option>
+            <option value=""><T text={"Select state"} /></option>
             {NIGERIA_STATES.map((state) => (
               <option key={state.name} value={state.name}>
                 {state.name}
@@ -81,9 +80,7 @@ export default function CreateProfilePage() {
           </select>
         </div>
         <div>
-          <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 6 }}>
-            Local Government Area
-          </div>
+          <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 6 }}><T text={"Local Government Area"} />{" "}</div>
           <select
             value={lga}
             onChange={(e) => setLga(e.target.value)}

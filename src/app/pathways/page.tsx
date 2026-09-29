@@ -54,7 +54,7 @@ function PathwayCard({ p, hero }: { p: Pathway; hero: boolean }) {
       <div style={{ marginTop: 14, height: 6, borderRadius: "var(--r-pill)", background: hero ? "rgba(255,255,255,0.15)" : "var(--c-cream)", overflow: "hidden" }}>
         <div style={{ height: "100%", width: `${p.progressPercent}%`, background: "linear-gradient(90deg, var(--c-magenta), var(--c-gold))" }} />
       </div>
-      <div style={{ fontSize: 11, marginTop: 6, opacity: 0.8 }}>{p.progressPercent}% complete</div>
+      <div style={{ fontSize: 11, marginTop: 6, opacity: 0.8 }}>{p.progressPercent}<T text={"% complete"} /></div>
 
       <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
         {p.lessons.map((l) => {
@@ -79,8 +79,7 @@ function PathwayCard({ p, hero }: { p: Pathway; hero: boolean }) {
         href={`/pathways/${p.id}`}
         className="sr-label"
         style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 14, fontSize: 10, color: hero ? "var(--c-gold)" : "var(--c-magenta)", fontWeight: 800 }}
-      >
-        View pathway <ChevronRightIcon size={14} />
+      ><T text={"View pathway"} />{" "}<ChevronRightIcon size={14} />
       </Link>
     </div>
   );
@@ -122,9 +121,7 @@ export default function PathwaysPage() {
         ))}
         {others.length > 0 && (
           <>
-            <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginTop: 8 }}>
-              Other pathways
-            </div>
+            <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginTop: 8 }}><T text={"Other pathways"} />{" "}</div>
             {others.map((p) => (
               <PathwayCard key={p.id} p={p} hero={false} />
             ))}

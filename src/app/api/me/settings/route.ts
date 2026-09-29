@@ -38,6 +38,7 @@ export async function PATCH(req: Request) {
     pin?: string;
   };
   if (language !== undefined && !ACCOUNT_LANGUAGES.includes(language)) return Response.json({ message: "Unsupported language." }, { status: 400 });
+  if (fbConnected || liConnected) return Response.json({ message: "External sharing is disabled for this private community." }, { status: 403 });
   const db = getDb();
   await db.prepare(
     `UPDATE users SET

@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 // Screen 22 — 1:1 trainer DM. Message bubbles (magenta for me, white for
 // them), typing composer. Trainer notes stay separate/private — never
 // surfaced here (see API comment on the route).
@@ -148,9 +149,7 @@ function TrainerChatPage({
               fontSize: 12,
               marginTop: 40,
             }}
-          >
-            Say hello to start your conversation.
-          </div>
+          ><T text={"Say hello to start your conversation."} />{" "}</div>
         )}
         {messages.map((m) => {
           const mine = m.sender_id === user?.id;

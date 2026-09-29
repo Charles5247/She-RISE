@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 // Screens 15 & 16 — Lesson detail (video + XP bar + steps) and Lesson
 // complete (celebration: gold medal, XP/streak/accuracy tri-card, next
 // lesson CTA). Combined into one route: completing the lesson swaps the
@@ -98,7 +99,7 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
           <MedalIcon size={44} style={{ color: "var(--c-plum)" }} />
         </div>
         <div>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 800, letterSpacing: "-0.02em" }}>Lesson complete!</div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 800, letterSpacing: "-0.02em" }}><T text={"Lesson complete!"} /></div>
           <div style={{ marginTop: 4, fontSize: 13, color: "var(--c-dark-text-soft)" }}>{lesson.title}</div>
         </div>
         <div style={{ display: "flex", gap: 10, width: "100%", maxWidth: 340 }}>
@@ -117,9 +118,7 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
         </div>
         <div style={{ width: "100%", maxWidth: 340, display: "flex", flexDirection: "column", gap: 8 }}>
           <PButton label="Back to pathway" onClick={() => router.back()} />
-          <button onClick={() => router.push("/feed")} className="sr-label" style={{ fontSize: 10, color: "var(--c-dark-text-soft)", background: "none", border: "none" }}>
-            Go to feed
-          </button>
+          <button onClick={() => router.push("/feed")} className="sr-label" style={{ fontSize: 10, color: "var(--c-dark-text-soft)", background: "none", border: "none" }}><T text={"Go to feed"} />{" "}</button>
         </div>
       </main>
     );
@@ -165,9 +164,7 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
           <div style={{ height: "100%", width: progress.status === "done" ? "100%" : "40%", background: "linear-gradient(90deg, var(--c-magenta), var(--c-gold))" }} />
         </div>
 
-        <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 10 }}>
-          Steps
-        </div>
+        <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 10 }}><T text={"Steps"} />{" "}</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
           {(lesson.steps.length ? lesson.steps : ["Watch the video", "Practice the technique", "Reflect on what you learned"]).map((s, i) => (
             <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 13 }}>
@@ -199,9 +196,7 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
         )}
 
         {progress.status === "done" ? (
-          <div className="sr-label" style={{ textAlign: "center", fontSize: 11, color: "var(--c-success)", fontWeight: 800 }}>
-            ✓ Completed
-          </div>
+          <div className="sr-label" style={{ textAlign: "center", fontSize: 11, color: "var(--c-success)", fontWeight: 800 }}><T text={"✓ Completed"} />{" "}</div>
         ) : (
           <PButton label={completing ? "Saving…" : "Mark lesson complete"} onClick={complete} disabled={completing} />
         )}

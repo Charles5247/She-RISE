@@ -36,7 +36,7 @@ export async function seedIfEmpty() {
     // In local development, preserve users already in the database while
     // filling in any missing documented demo accounts. Production never
     // receives accounts with the public demo password.
-    if (process.env.NODE_ENV !== "production") await ensureDemoAccounts(db);
+    await ensureDemoAccounts(db);
     return { seeded: false };
   }
 

@@ -87,7 +87,7 @@ export default function ProgressPage() {
                 {s.value}
               </div>
               <div className="sr-label" style={{ fontSize: 9, marginTop: 4, opacity: 0.75 }}>
-                {s.label}
+                <T text={s.label} />
               </div>
             </div>
           ))}
@@ -112,7 +112,7 @@ export default function ProgressPage() {
               >
                 <MedalIcon size={22} style={{ color: m.earned ? "var(--c-plum)" : "var(--c-ink-soft)" }} />
               </div>
-              <div style={{ fontSize: 9, textAlign: "center", color: "var(--c-ink-soft)", lineHeight: 1.2 }}>{m.label}</div>
+              <div style={{ fontSize: 9, textAlign: "center", color: "var(--c-ink-soft)", lineHeight: 1.2 }}><T text={m.label} /></div>
             </div>
           ))}
         </div>

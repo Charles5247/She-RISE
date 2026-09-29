@@ -4,7 +4,8 @@
 // (#/empty-feed) shows for a newcomer with zero circles/posts yet.
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { TabBar, Avatar, EmptyState, BellIcon, PlusIcon } from "@/components";
+import { TabBar, Avatar, EmptyState, PlusIcon } from "@/components";
+import { NotificationBell } from "@/components/NotificationBell";
 import { PostCard, type PostData } from "@/components/PostCard";
 import { LoadingState, ErrorState, OfflineBanner } from "@/components/States";
 import { getJson, postJson, deleteJson } from "@/lib/apiClient";
@@ -91,9 +92,7 @@ export default function FeedPage() {
           SHE.
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <Link href="/notifications" aria-label="Notifications" style={{ color: "var(--c-ink)" }}>
-            <BellIcon size={20} />
-          </Link>
+          <NotificationBell />
           <Link href="/profile" aria-label="My profile">
             <Avatar name={user?.first_name || "Me"} size={30} palette="warm" imageUrl={user?.avatar_url ?? null} />
           </Link>

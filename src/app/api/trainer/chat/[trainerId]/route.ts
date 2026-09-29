@@ -73,13 +73,14 @@ const handle = withErrorHandling(
         .run(id, trainerId, participantId, user.id, payload.body.trim());
       await tx
         .prepare(
-          "INSERT INTO notifications (id, user_id, kind, actor_id, body) VALUES (?, ?, 'trainer_message', ?, ?)",
+          "INSERT INTO notifications (id, user_id, kind, actor_id, body, href) VALUES (?, ?, 'trainer_message', ?, ?, ?)",
         )
         .run(
           newId("ntf"),
           user.role === "trainer" ? participantId : trainerId,
           user.id,
           user.first_name + " sent you a message",
+          `/trainer-chat/${encodeURIComponent(trainerId)}${user.role === "participant" ? `?participantId=${encodeURIComponent(participantId)}` : ""}`,
         );
     })();
     return Response.json({ ok: true, id });

@@ -1,8 +1,9 @@
 import { getDb } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
+import { withErrorHandling } from "@/lib/apiError";
 
 // GET /api/notifications — grouped by day (screen 12)
-export async function GET() {
+export const GET = withErrorHandling(async () => {
   const user = await getSessionUser();
   if (!user) return Response.json({ code: "UNAUTHORIZED", message: "Sign in required." }, { status: 401 });
 
@@ -27,18 +28,25 @@ export async function GET() {
       kind: r.kind,
       body: r.body,
       postId: r.post_id,
+      href: r.href || (r.post_id ? `/posts/${encodeURIComponent(String(r.post_id))}` :
+        r.kind === "trainer_message" && user.role === "participant" && r.actor_id ? `/trainer-chat/${encodeURIComponent(String(r.actor_id))}` : null),
       actor: r.actor_id ? { firstName: r.actor_first_name, avatarUrl: r.actor_avatar_url } : null,
       createdAt: r.created_at,
       read: !!r.read_at,
     });
   }
-  return Response.json(grouped);
-}
+  const count = await db.prepare<{ count: number }>("SELECT COUNT(*) AS count FROM notifications WHERE user_id = ? AND read_at IS NULL").get(user.id);
+  return Response.json({ ...grouped, unreadCount: Number(count?.count ?? 0) }, { headers: { "Cache-Control": "no-store" } });
+});
 
-export async function PATCH(req: Request) {
+export const PATCH = withErrorHandling(async (req: Request) => {
   const user = await getSessionUser();
   if (!user) return Response.json({ code: "UNAUTHORIZED", message: "Sign in required." }, { status: 401 });
-  const { id } = (await req.json().catch(() => ({}))) as { id?: string };
+  const body = await req.json().catch(() => null);
+  if (!body || (body.id !== undefined && (typeof body.id !== "string" || !body.id))) {
+    return Response.json({ message: "Invalid notification ID." }, { status: 400 });
+  }
+  const { id } = body as { id?: string };
   const db = getDb();
   if (id) {
     await db.prepare(`UPDATE notifications SET read_at = NOW() WHERE id = ? AND user_id = ?`).run(id, user.id);
@@ -46,4 +54,4 @@ export async function PATCH(req: Request) {
     await db.prepare(`UPDATE notifications SET read_at = NOW() WHERE user_id = ? AND read_at IS NULL`).run(user.id);
   }
   return Response.json({ ok: true });
-}
+});

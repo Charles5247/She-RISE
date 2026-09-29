@@ -221,6 +221,40 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE notifications ADD COLUMN IF NOT EXISTS href TEXT;
+-- Retain existing kinds while adding learning activity notifications.
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = 'notifications'::regclass
+    AND conname = 'notifications_kind_check' AND pg_get_constraintdef(oid) LIKE '%assignment%') THEN
+    ALTER TABLE notifications DROP CONSTRAINT IF EXISTS notifications_kind_check;
+    ALTER TABLE notifications ADD CONSTRAINT notifications_kind_check CHECK
+      (kind IN ('reaction','comment','milestone_verified','broadcast','trainer_message','circle','assignment','course'));
+  END IF;
+END $$;
+CREATE INDEX IF NOT EXISTS notifications_unread ON notifications(user_id) WHERE read_at IS NULL;
+
+CREATE TABLE IF NOT EXISTS learning_assignments (
+  id TEXT PRIMARY KEY,
+  participant_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  assigned_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+  title TEXT NOT NULL CHECK (char_length(title) BETWEEN 1 AND 150),
+  instructions TEXT NOT NULL CHECK (char_length(instructions) BETWEEN 1 AND 5000),
+  due_date DATE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS learning_assignments_participant ON learning_assignments(participant_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS learning_assignments_author ON learning_assignments(assigned_by);
+ALTER TABLE learning_assignments ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON learning_assignments FROM PUBLIC;
+DO $$ BEGIN
+  IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'anon') THEN
+    REVOKE ALL ON learning_assignments FROM anon;
+  END IF;
+  IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'authenticated') THEN
+    REVOKE ALL ON learning_assignments FROM authenticated;
+  END IF;
+END $$;
+
 CREATE TABLE IF NOT EXISTS referrals (
   id                    TEXT PRIMARY KEY,
   participant_id        TEXT REFERENCES users(id) ON DELETE SET NULL,

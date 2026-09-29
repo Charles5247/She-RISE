@@ -4,12 +4,16 @@ import fs from "node:fs";
 import postgres from "postgres";
 import env from "@next/env";
 env.loadEnvConfig(process.cwd());
+if (process.env.ALLOW_PORTAL_TEST_WRITES !== "1") {
+  throw new Error("Confirm a development/test DATABASE_URL and set ALLOW_PORTAL_TEST_WRITES=1 before running this suite. It applies schema and creates temporary records.");
+}
 const sql = postgres(process.env.DATABASE_URL || process.env.SUPABASE_DB_URL || process.env.POSTGRES_URL, { prepare: false, max: 1, connect_timeout: 10, onnotice: () => {} });
 const base = process.env.TEST_BASE_URL || "http://localhost:3001";
 const prefix = "qa_trainer_" + crypto.randomBytes(6).toString("hex");
 const email = prefix + "@example.test";
 const password = crypto.randomBytes(18).toString("hex");
 const ids = [];
+let connected = false;
 async function request(path, method = "GET", body, cookie = "", status = 200) {
   const r = await fetch(base + path, { method, signal: AbortSignal.timeout(60000), headers: { "Content-Type": "application/json", Cookie: cookie }, ...(body ? { body: JSON.stringify(body) } : {}) });
   const data = await r.json();
@@ -26,6 +30,8 @@ async function fixture(role) {
   return "sherise_session=" + token;
 }
 try {
+  await sql`SELECT 1`;
+  connected = true;
   await sql.unsafe(fs.readFileSync("src/lib/schema.sql", "utf8"));
   const created = await request("/api/trainer/signup", "POST", { name: "QA trainer", email, password, specialty: "Testing", acceptedTerms: true, role: "admin" }, "", 201);
   const [user] = await sql`SELECT id,role,is_verified_trainer FROM users WHERE email=${email}`;
@@ -67,10 +73,55 @@ try {
   await request("/api/trainer/materials/" + prefix, "GET", null, created.cookie, 404);
   const [rls] = await sql`SELECT relrowsecurity FROM pg_class WHERE oid='course_materials'::regclass`;
   assert.equal(rls.relrowsecurity, true);
+  const participantId = prefix + "_participant";
+  const admin = await fixture("admin");
+  const task = { participantId, title: "QA practice", instructions: "Practise the first module.", dueDate: "2026-10-10" };
+  await request("/api/admin/learning-assignments", "POST", task, participant, 403);
+  await request("/api/admin/learning-assignments", "POST", task, sponsor, 403);
+  await request("/api/admin/learning-assignments", "POST", task, created.cookie, 403);
+  await sql`INSERT INTO trainer_assignments(id,trainer_id,participant_id,assigned_by) VALUES (${prefix},${user.id},${participantId},${prefix + "_admin"})`;
+  const assigned = await request("/api/admin/learning-assignments", "POST", task, created.cookie, 201);
+  await request("/api/admin/learning-assignments", "POST", { ...task, title: "QA admin activity" }, admin, 201);
+  await request("/api/admin/learning-assignments", "POST", { ...task, dueDate: "2026-02-30" }, admin, 400);
+  const tasks = await request("/api/me/assignments", "GET", null, participant);
+  assert.equal(tasks.data.assignments.length, 2);
+  assert.ok(tasks.data.assignments.some(t => t.id === assigned.data.id));
+  let inbox = await request("/api/notifications", "GET", null, participant);
+  assert.equal(inbox.data.unreadCount, 2);
+  const note = [...inbox.data.today, ...inbox.data.earlier].find(n => n.href === "/dashboard#assignment-" + assigned.data.id);
+  assert.ok(note);
+  await request("/api/notifications", "PATCH", { id: note.id }, other);
+  inbox = await request("/api/notifications", "GET", null, participant);
+  assert.equal(inbox.data.unreadCount, 2, "Another user cannot mark a notification read");
+  await request("/api/notifications", "PATCH", { id: note.id }, participant);
+  inbox = await request("/api/notifications", "GET", null, participant);
+  assert.equal(inbox.data.unreadCount, 1);
+  await request("/api/notifications", "PATCH", {}, participant);
+  inbox = await request("/api/notifications", "GET", null, participant);
+  assert.equal(inbox.data.unreadCount, 0);
+  await request("/api/trainer/chat/" + user.id, "POST", { participantId, body: "QA message" }, created.cookie, 200);
+  inbox = await request("/api/notifications", "GET", null, participant);
+  assert.equal(inbox.data.unreadCount, 1);
+  assert.ok([...inbox.data.today, ...inbox.data.earlier].some(n => n.href === "/trainer-chat/" + user.id));
+  await sql`INSERT INTO milestones(id,user_id,type,amount) VALUES (${prefix + "_income"},${participantId},'first_income',1500)`;
+  await sql`INSERT INTO lessons(id,pathway_id,title,xp_value) VALUES (${prefix},${prefix},'QA lesson',10)`;
+  await request("/api/lessons/" + prefix + "/complete", "POST", {}, participant);
+  const repeat = await request("/api/lessons/" + prefix + "/complete", "POST", {}, participant);
+  assert.equal(repeat.data.xpAwarded, 0);
+  const progress = await request("/api/me/progress", "GET", null, participant);
+  assert.equal(progress.data.incomeTotal, 1500);
+  assert.equal(progress.data.xpTotal, 10);
+  assert.equal(progress.data.lessonsCompleted, 1);
+  assert.equal(progress.data.streakCount, 1);
+  assert.equal(progress.data.weeklyActivity.length, 7);
+  console.log("PASS: assignment delivery, recipient notifications, read-state ownership, message links, income totals and idempotent lesson XP.");
   console.log("PASS: trainer signup/login, duplicate-account protection, role isolation, ownership, file validation, pending-file access, and RLS.");
   console.log(library.data.storageReady ? "Live upload/download still requires a storage smoke test." : "Live storage test unavailable: SUPABASE_SERVICE_ROLE_KEY is missing.");
 } finally {
-  await sql`DELETE FROM pathways WHERE id=${prefix}`;
-  await sql`DELETE FROM users WHERE id = ANY(${ids}) OR email=${email}`;
+  if (connected) {
+    await sql`DELETE FROM trainer_assignments WHERE id=${prefix}`;
+    await sql`DELETE FROM pathways WHERE id=${prefix}`;
+    await sql`DELETE FROM users WHERE id = ANY(${ids}) OR email=${email}`;
+  }
   await sql.end();
 }

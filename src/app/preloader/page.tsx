@@ -40,7 +40,7 @@ export default function PreloaderPage() {
 
       const next = () => {
         if (res.ok && res.data?.user) {
-          router.replace(res.data.user.onboarding_complete ? "/feed" : "/onboarding/profile");
+          router.replace(res.data.user.onboarding_complete ? "/dashboard" : "/onboarding/profile");
           return;
         }
         const seenWelcome = sessionStorage.getItem("sherise_seen_welcome");

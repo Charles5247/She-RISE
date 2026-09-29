@@ -8,6 +8,7 @@ import { LoadingState, ErrorState } from "@/components/States";
 import { FlameIcon } from "@/components/Icon";
 import { useSessionUser } from "@/lib/useSessionUser";
 import { getJson } from "@/lib/apiClient";
+import Link from "next/link";
 
 interface OverviewData {
   kpis: {
@@ -68,6 +69,7 @@ export default function AdminOverviewPage() {
       subtitle="MOVEMENT MODE"
       userName={user?.first_name ?? "Admin"}
       onExport={() => window.print()}
+      right={<Link href="/demo/dashboard" className="sr-portal-link">Preview participant dashboard</Link>}
     >
       {error && !data && <ErrorState message={error} onRetry={load} />}
       {!data && !error && <LoadingState label="Loading dashboard…" />}

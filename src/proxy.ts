@@ -24,7 +24,7 @@ export function proxy(req: NextRequest) {
     return NextResponse.rewrite(new URL("/404", req.url));
   }
 
-  if (surface === "admin" && isMarketingOrApp && pathname !== "/") {
+  if (surface === "admin" && isMarketingOrApp && pathname !== "/" && pathname !== "/demo/dashboard") {
     // Admin-only deployment: any non-admin app route bounces to admin login.
     return NextResponse.redirect(new URL("/admin/login", req.url));
   }

@@ -26,7 +26,7 @@ export default function LoginPage() {
       setError("This account uses the staff sign-in page.");
       return;
     }
-    router.push("/feed");
+    router.push("/dashboard");
   }
 
   return (

@@ -10,6 +10,7 @@ import { Spark } from "@/components/Spark";
 import { LoadingState, ErrorState } from "@/components/States";
 import { useSessionUser } from "@/lib/useSessionUser";
 import { getJson } from "@/lib/apiClient";
+import { AssignmentForm } from "@/components/AssignmentForm";
 
 interface DetailData {
   participant: {
@@ -71,6 +72,7 @@ export default function AdminParticipantDetailPage({ params }: { params: Promise
 
       {error && !data && <ErrorState message={error} onRetry={load} />}
       {!data && !error && <LoadingState label="Loading participant…" />}
+      {data && <AssignmentForm participantId={id} participantName={data.participant.firstName} />}
 
       {data && (
         <div style={{ background: "var(--c-plum)", color: "var(--c-dark-text)", borderRadius: "var(--r-xl)", padding: 24 }}>

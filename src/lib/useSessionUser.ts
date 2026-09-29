@@ -37,7 +37,7 @@ export function useSessionUser(opts: { loginPath?: string; expectedRole?: Sessio
         return;
       }
       if (res.data.user.role !== expectedRole) {
-        const destination = res.data.user.role === "admin" ? "/admin/overview" : res.data.user.role === "trainer" ? "/trainer/dashboard" : res.data.user.role === "sponsor" ? "/sponsor/dashboard" : "/feed";
+        const destination = res.data.user.role === "admin" ? "/admin/overview" : res.data.user.role === "trainer" ? "/trainer/dashboard" : res.data.user.role === "sponsor" ? "/sponsor/dashboard" : "/dashboard";
         router.replace(destination);
         return;
       }

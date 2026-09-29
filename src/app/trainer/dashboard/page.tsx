@@ -1,6 +1,7 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { AssignmentForm } from "@/components/AssignmentForm";
 import { useSessionUser } from "@/lib/useSessionUser";
 import { getJson, postJson } from "@/lib/apiClient";
 import { LoadingState, ErrorState } from "@/components/States";
@@ -156,6 +157,7 @@ export default function TrainerDashboardPage() {
                   </div>
                 ))}
                 <NoteForm id={p.id} onSaved={load} />
+                <AssignmentForm participantId={p.id} participantName={p.first_name} />
               </article>
             ))}
           </PortalCard>

@@ -174,7 +174,37 @@ variables.
 - Design tokens from the locked "Bold & Empowering" system are wired into
   `src/app/globals.css` as CSS custom properties.
 
-## Production build
+## Participant activity dashboard and trainer portal
+
+- `/dashboard` is the participant home after sign-in. It shows recorded income
+  milestones (not a wallet balance), XP, current streak, medals, learning activity,
+  assignments, and a separate notification panel.
+- `/demo/dashboard` is a public, fictional sample for client review. It reads no
+  participant data and supports demo notification read states and a sample message.
+  It is also linked from the admin overview and allowed on both deployment surfaces.
+- Notifications refresh on entry, window focus, and every 30 seconds while visible.
+  Assignments, new courses, and trainer messages create alerts with destination links.
+  These are in-app alerts, not operating-system push notifications or emails.
+- Trainers send learning assignments from their assigned participant cards;
+  admins send them from participant details. Trainers cannot target unassigned users.
+- `/trainer/signup`, `/trainer/login`, and `/trainer/materials` provide registration,
+  staff sign-in, and a private preparation library for video, PowerPoint, and PDF
+  modules. Uploading a module does not publish a participant lesson.
+- Uploads require `NEXT_PUBLIC_SUPABASE_URL` (or `SUPABASE_URL`) and the server-only
+  `SUPABASE_SERVICE_ROLE_KEY`. The private `course-materials` bucket is created on
+  first upload with supported MIME types and a 50 MB file limit. Do not make this
+  bucket public. The UI reports when storage is not configured.
+
+Restart the server after updating `src/lib/schema.sql`; the existing database
+bootstrap applies the repeatable schema at the first database request per process.
+Use a development/test database and explicitly set `ALLOW_PORTAL_TEST_WRITES=1`
+when running `node scripts/test-trainer-portal.mjs`
+against `TEST_BASE_URL` (default `http://localhost:3001`). The test creates and removes
+its own fixtures and checks signup, authorization, assignment notifications, read
+ownership, progress totals, and repeat completion handling. Live upload/download
+also needs a smoke test with configured Supabase Storage.
+
+## Production build command
 
 `npm run build` runs `next build --webpack` — see the Turbopack note in
 `BUILD_STATUS.md`.

@@ -14,8 +14,13 @@ export const POST = withErrorHandling(async (req: Request) => {
   const db = getDb();
   const order = await db.prepare(`SELECT COALESCE(MAX(order_index), -1) + 1 AS next FROM pathways`).get() as { next: number };
   const id = newId("path");
-  await db.prepare(`INSERT INTO pathways (id, title, skill_category, description, order_index) VALUES (?, ?, ?, ?, ?)`)
-    .run(id, title, category, description || null, order.next);
+  await db.transaction(async tx => {
+    await tx.prepare(`INSERT INTO pathways (id, title, skill_category, description, order_index) VALUES (?, ?, ?, ?, ?)`)
+      .run(id, title, category, description || null, order.next);
+    await tx.prepare(`INSERT INTO notifications (id, user_id, kind, actor_id, body, href)
+      SELECT ? || id, id, 'course', ?, ?, ? FROM users WHERE role = 'participant'`)
+      .run(newId("ntf") + "_", user.id, `New course added: ${title}`, `/pathways/${id}`);
+  })();
   return Response.json({ ok: true, id }, { status: 201 });
 });
 

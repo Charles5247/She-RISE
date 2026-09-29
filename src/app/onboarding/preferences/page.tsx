@@ -50,7 +50,7 @@ export default function PreferencesPage() {
       setError(result.message);
       return;
     }
-    router.push("/feed");
+    router.push("/dashboard");
   }
 
   return (

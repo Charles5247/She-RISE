@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { HomeIcon, BookIcon, PlusIcon, ChartIcon, UserIcon } from "./Icon";
 
 const TABS = [
-  { id: "home", href: "/feed", icon: HomeIcon, label: "Feed" },
+  { id: "home", href: "/dashboard", icon: HomeIcon, label: "Home" },
   { id: "learn", href: "/pathways", icon: BookIcon, label: "Learn" },
   { id: "plus", href: "/composer", icon: PlusIcon, label: "" },
   { id: "progress", href: "/progress", icon: ChartIcon, label: "Progress" },

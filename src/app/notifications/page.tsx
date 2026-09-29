@@ -2,22 +2,12 @@
 // Screen 12 — Notifications. Grouped by day ("Today" / "Earlier this week"),
 // avatar with kind-badge. Tapping a notification marks it read and (if it
 // references a post) navigates to that post.
-import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, ChevronLeftIcon, HeartIcon, CommentIcon, BellIcon, EmptyState } from "@/components";
 import { timeAgo } from "@/components/PostCard";
 import { LoadingState, ErrorState } from "@/components/States";
-import { getJson, patchJson } from "@/lib/apiClient";
+import { useNotifications, type NotificationItem } from "@/lib/useNotifications";
 
-interface NotificationItem {
-  id: string;
-  kind: string;
-  body: string;
-  postId: string | null;
-  actor: { firstName: string; avatarUrl: string | null } | null;
-  createdAt: string;
-  read: boolean;
-}
 
 function kindIcon(kind: string) {
   if (kind === "comment") return <CommentIcon size={12} />;
@@ -60,28 +50,11 @@ function NotificationRow({ n, onClick }: { n: NotificationItem; onClick: () => v
 
 export default function NotificationsPage() {
   const router = useRouter();
-  const [data, setData] = useState<{ today: NotificationItem[]; earlier: NotificationItem[] } | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    setError(null);
-    const res = await getJson<{ today: NotificationItem[]; earlier: NotificationItem[] }>("/api/notifications");
-    if (!res.ok || !res.data) {
-      setError(res.message);
-      return;
-    }
-    setData(res.data);
-  }, []);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- standard fetch-on-mount; load() sets state asynchronously after awaiting the API.
-    load();
-  }, [load]);
+  const { data, error, refresh: load, markRead } = useNotifications();
 
   async function open(n: NotificationItem) {
-    if (!n.read) await patchJson("/api/notifications", { id: n.id });
-    if (n.postId) router.push(`/posts/${n.postId}`);
-    else load();
+    if (!n.read && !await markRead(n.id)) return;
+    if (n.href?.startsWith("/") && !n.href.startsWith("//")) router.push(n.href);
   }
 
   if (error && !data) return <ErrorState message={error} onRetry={load} />;
@@ -111,8 +84,7 @@ export default function NotificationsPage() {
         {!isEmpty && (
           <button
             onClick={async () => {
-              await patchJson("/api/notifications", {});
-              load();
+              await markRead();
             }}
             className="sr-label"
             style={{ marginLeft: "auto", fontSize: 10, color: "var(--c-magenta)", background: "none", border: "none", cursor: "pointer" }}
@@ -121,6 +93,7 @@ export default function NotificationsPage() {
           </button>
         )}
       </header>
+      {error && <p role="alert" className="sr-portal-error">{error}</p>}
 
       {isEmpty ? (
         <EmptyState icon={<BellIcon size={28} />} title="No notifications yet" body="You'll see cheers, comments, and trainer messages here." />
@@ -139,7 +112,7 @@ export default function NotificationsPage() {
           {data.earlier.length > 0 && (
             <>
               <div className="sr-label" style={{ padding: "14px 16px 6px", fontSize: 10, color: "var(--c-ink-soft)" }}>
-                Earlier this week
+                Earlier
               </div>
               {data.earlier.map((n) => (
                 <NotificationRow key={n.id} n={n} onClick={() => open(n)} />

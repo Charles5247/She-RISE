@@ -1,10 +1,11 @@
 import { getDb, newId } from "@/lib/db";
-import { getSessionUser } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
+import { withErrorHandling } from "@/lib/apiError";
 
 // POST /api/lessons/{id}/complete — awards XP + streak, unlocks the next lesson (screen 16)
-export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const user = await getSessionUser();
-  if (!user) return Response.json({ code: "UNAUTHORIZED", message: "Sign in required." }, { status: 401 });
+export const POST = withErrorHandling(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
+  const user = await requireRole("participant");
+  if (user instanceof Response) return user;
   const { id } = await params;
   const { accuracy } = (await req.json().catch(() => ({}))) as { accuracy?: number };
 
@@ -14,11 +15,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     | undefined;
   if (!lesson) return Response.json({ code: "NOT_FOUND", message: "Lesson not found." }, { status: 404 });
 
-  const userRow = (await db.prepare(`SELECT xp_total, streak_count, last_lesson_date FROM users WHERE id = ?`).get(user.id)) as {
+  return db.transaction(async (t) => {
+  // Serialise completions for this participant so retries cannot inflate XP
+  // or overwrite the original activity date.
+  const userRow = (await t.prepare(`SELECT xp_total, streak_count, last_lesson_date FROM users WHERE id = ? FOR UPDATE`).get(user.id)) as {
     xp_total: number;
     streak_count: number;
     last_lesson_date: string | null;
   };
+  const completed = await t.prepare("SELECT lesson_id FROM lesson_progress WHERE user_id = ? AND lesson_id = ? AND status = 'done'").get(user.id, id);
+  if (completed) return Response.json({ ok: true, xpAwarded: 0, streakCount: userRow.streak_count, totalXp: userRow.xp_total });
 
   const today = new Date().toISOString().slice(0, 10);
   let newStreak = userRow.streak_count;
@@ -27,7 +33,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     newStreak = userRow.last_lesson_date === yesterday ? userRow.streak_count + 1 : 1;
   }
 
-  const tx = db.transaction(async (t) => {
     await t.prepare(
       `INSERT INTO lesson_progress (user_id, lesson_id, status, completed_at, accuracy)
        VALUES (?, ?, 'done', NOW(), ?)
@@ -59,8 +64,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         user.id
       );
     }
-  });
-  await tx();
-
   return Response.json({ ok: true, xpAwarded: lesson.xp_value, streakCount: newStreak, totalXp: userRow.xp_total + lesson.xp_value });
-}
+  })();
+});

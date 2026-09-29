@@ -75,7 +75,7 @@ function VerifyForm() {
       setError(result.message);
       return;
     }
-    router.push(result.data?.onboardingComplete ? "/feed" : "/onboarding/profile");
+    router.push(result.data?.onboardingComplete ? "/dashboard" : "/onboarding/profile");
   }
 
   async function resend() {

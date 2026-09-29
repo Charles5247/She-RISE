@@ -1,10 +1,22 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "sherise-theme";
 type Theme = "light" | "dark";
+
+function subscribe(listener: () => void) {
+  window.addEventListener("storage", listener);
+  window.addEventListener("sherise-theme-change", listener);
+  return () => {
+    window.removeEventListener("storage", listener);
+    window.removeEventListener("sherise-theme-change", listener);
+  };
+}
+function getTheme(): Theme {
+  return window.localStorage.getItem(STORAGE_KEY) === "dark" ? "dark" : "light";
+}
 
 function applyTheme(theme: Theme) {
   document.documentElement.dataset.theme = theme;
@@ -12,20 +24,16 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>("light");
+  const theme = useSyncExternalStore(subscribe, getTheme, () => "light" as Theme);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    const initial: Theme =
-      stored === "dark" || stored === "light" ? stored : "light";
-    setTheme(initial);
-    applyTheme(initial);
-  }, []);
+    applyTheme(theme);
+  }, [theme]);
 
   function toggleTheme() {
     const next: Theme = theme === "light" ? "dark" : "light";
-    setTheme(next);
     window.localStorage.setItem(STORAGE_KEY, next);
+    window.dispatchEvent(new Event("sherise-theme-change"));
     applyTheme(next);
   }
 

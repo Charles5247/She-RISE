@@ -144,6 +144,7 @@ export function AdminShell({
                   <Link
                     key={t.k}
                     href={t.href}
+                    className="sr-admin-nav-link"
                     style={{
                       padding: "4px 0",
                       color: isActive ? "var(--c-ink)" : "var(--c-ink-soft)",
@@ -246,6 +247,7 @@ export function AdminShell({
           >
             {title && (
               <div
+                className="sr-admin-page-title"
                 style={{
                   fontFamily: "var(--font-display)",
                   fontSize: 26,

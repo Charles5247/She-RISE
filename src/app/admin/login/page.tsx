@@ -130,6 +130,12 @@ export default function AdminLoginPage() {
         className="sr-admin-login-form-side flex items-center justify-center p-8 md:p-16"
         style={{ background: "var(--c-off)", color: "var(--c-ink)" }}
       >
+        <div className="sr-admin-login-mobile-brand" aria-hidden="true">
+          <span>SR</span>
+          <strong>
+            SheRISE<span>.</span> Command
+          </strong>
+        </div>
         <form
           onSubmit={submit}
           className="w-full max-w-md p-9 rounded-lg"

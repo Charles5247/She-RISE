@@ -165,9 +165,13 @@ body {
 /* Some older screens still provide white through inline styles. Keep those
    shared card surfaces readable when the global theme is dark. */
 [data-theme="dark"] [style*="background: #fff"],
+[data-theme="dark"] [style*="background:#fff"],
 [data-theme="dark"] [style*="backgroundColor: #fff"],
+[data-theme="dark"] [style*="background-color:#fff"],
 [data-theme="dark"] [style*="background: rgb(255, 255, 255)"],
-[data-theme="dark"] [style*="background-color: rgb(255, 255, 255)"] {
+[data-theme="dark"] [style*="background:rgb(255,255,255)"],
+[data-theme="dark"] [style*="background-color: rgb(255, 255, 255)"],
+[data-theme="dark"] [style*="background-color:rgb(255,255,255)"] {
   background: var(--c-cream) !important;
 }
 
@@ -479,9 +483,13 @@ body {
   align-items: center;
   text-decoration: underline;
 }
+.sr-admin-login-mobile-brand {
+  display: none;
+}
 @media (max-width: 767px) {
   .sr-admin-shell-inner {
-    padding: 72px 16px 40px !important;
+    padding: max(72px, calc(env(safe-area-inset-top) + 48px)) 16px
+      max(40px, env(safe-area-inset-bottom)) !important;
   }
   .sr-admin-shell-inner > :first-child {
     align-items: stretch !important;
@@ -502,7 +510,9 @@ body {
   }
   .sr-admin-nav a {
     flex: 0 0 auto;
-    min-height: 32px;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
   }
   .sr-admin-actions {
     flex-wrap: wrap;
@@ -512,6 +522,10 @@ body {
   }
   .sr-admin-content {
     overflow-x: auto;
+  }
+  .sr-admin-content
+    > div[style*="grid-template-columns"]:not(.sr-admin-table-wrap) {
+    grid-template-columns: minmax(0, 1fr) !important;
   }
   .sr-admin-overview {
     padding: 16px !important;
@@ -544,14 +558,56 @@ body {
     min-width: 760px;
   }
   .sr-admin-login {
-    grid-template-columns: 1fr !important;
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) !important;
   }
   .sr-admin-login-form-side {
+    min-width: 0;
     min-height: 100svh;
-    padding: 76px 20px 32px !important;
+    flex-direction: column;
+    gap: 20px;
+    padding: max(76px, calc(env(safe-area-inset-top) + 60px)) 20px
+      max(32px, env(safe-area-inset-bottom)) !important;
+  }
+  .sr-admin-login-mobile-brand {
+    display: flex;
+    width: 100%;
+    max-width: 448px;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-display);
+    color: var(--c-ink);
+  }
+  .sr-admin-login-mobile-brand > span {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    place-items: center;
+    border-radius: 8px;
+    background: var(--c-gold);
+    font-size: 16px;
+    font-weight: 800;
+  }
+  .sr-admin-login-mobile-brand strong {
+    font-size: 18px;
+    line-height: 1.2;
+  }
+  .sr-admin-login-mobile-brand strong span {
+    color: var(--c-magenta);
   }
   .sr-admin-login-form-side form {
+    width: 100%;
+    max-width: 448px;
+    min-width: 0;
     padding: 28px 20px !important;
+  }
+  .sr-admin-login-form-side input,
+  .sr-admin-login-form-side button {
+    min-height: 48px;
+  }
+  .sr-admin-page-title {
+    font-size: 22px !important;
   }
   .sr-portal-header {
     align-items: flex-start;
@@ -578,5 +634,13 @@ body {
   }
   .sr-portal-card {
     padding: 18px;
+  }
+}
+
+@media (max-width: 600px) {
+  .sr-admin-shell ~ .sr-theme-toggle,
+  .sr-admin-login ~ .sr-theme-toggle {
+    top: max(16px, env(safe-area-inset-top));
+    bottom: auto;
   }
 }

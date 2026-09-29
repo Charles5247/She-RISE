@@ -5,7 +5,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar } from "./Avatar";
-import { SearchIcon, DownloadIcon } from "./Icon";
+import { DownloadIcon } from "./Icon";
+import { Menu, X } from "lucide-react";
 import { postJson } from "@/lib/apiClient";
 import { useState } from "react";
 
@@ -44,6 +45,7 @@ export function AdminShell({
   const pathname = usePathname();
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   async function logout() {
     setLoggingOut(true);
@@ -128,7 +130,14 @@ export function AdminShell({
                 </div>
               </div>
             </div>
+            <button type="button" className="sr-admin-menu" aria-expanded={menuOpen} aria-controls="admin-navigation" onClick={() => setMenuOpen(!menuOpen)}>
+              {menuOpen ? <X size={20} /> : <Menu size={20} />}
+              {menuOpen ? "Close menu" : "Menu"}
+            </button>
             <nav
+              id="admin-navigation"
+              aria-label="Administration"
+              data-open={menuOpen}
               className="sr-admin-nav"
               style={{
                 display: "flex",
@@ -144,6 +153,8 @@ export function AdminShell({
                   <Link
                     key={t.k}
                     href={t.href}
+                    aria-current={isActive ? "page" : undefined}
+                    onClick={() => setMenuOpen(false)}
                     className="sr-admin-nav-link"
                     style={{
                       padding: "4px 0",
@@ -164,20 +175,6 @@ export function AdminShell({
             className="sr-admin-actions"
             style={{ display: "flex", gap: 10, alignItems: "center" }}
           >
-            <div
-              style={{
-                padding: "8px 12px",
-                border: "1px solid var(--c-line)",
-                borderRadius: 6,
-                fontSize: 12,
-                color: "var(--c-ink-soft)",
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              <SearchIcon size={14} /> Search…
-            </div>
             {onExport && (
               <button
                 onClick={onExport}

@@ -36,8 +36,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
   let userId: string;
   if (existing) {
-    userId = existing.id;
-    await db.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`).run(hashPassword(password), userId);
+    return Response.json({ code: "ACCOUNT_EXISTS", message: "An account already exists. Log in or reset your password." }, { status: 409 });
   } else {
     userId = newId("usr");
     await db.prepare(

@@ -1,6 +1,8 @@
 "use client";
 import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { postJson } from "@/lib/apiClient";
 import { PButton } from "./PButton";
 import { Avatar } from "./Avatar";
@@ -38,6 +40,8 @@ export function StaffPortal({
   children: ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const base = role === "Trainer" ? "/trainer" : "/sponsor";
   const [logoutError, setLogoutError] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
   return (
@@ -65,6 +69,11 @@ export function StaffPortal({
           }}
         />
       </header>
+      <nav className="sr-portal-nav" aria-label={`${role} navigation`}>
+        <Link href={`${base}/dashboard`} aria-current={pathname === `${base}/dashboard` ? "page" : undefined}>Overview</Link>
+        <Link href={`${base}/dashboard#participants`}>Participants</Link>
+        {role === "Trainer" && <Link href="/trainer/materials" aria-current={pathname === "/trainer/materials" ? "page" : undefined}>Course materials</Link>}
+      </nav>
       <div className="sr-portal-content">
         {logoutError && (
           <p className="sr-portal-error" role="alert">

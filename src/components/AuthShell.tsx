@@ -13,10 +13,32 @@ export interface AuthShellProps {
   showBack?: boolean;
 }
 
-export function AuthShell({ title, subtitle, children, onBack, showBack = true }: AuthShellProps) {
+export function AuthShell({
+  title,
+  subtitle,
+  children,
+  onBack,
+  showBack = true,
+}: AuthShellProps) {
   const router = useRouter();
   return (
     <main className="sr-auth-stage">
+      <aside className="sr-auth-aside" aria-label="About SheRISE">
+        <div className="sr-auth-aside-brand">
+          <span>SR</span>
+          <strong>SheRISE.</strong>
+        </div>
+        <div className="sr-auth-aside-copy">
+          <p>ONE STEP AT A TIME</p>
+          <h2>Your next chapter starts here.</h2>
+          <div>
+            Build skills, find community, and move forward at your own pace.
+          </div>
+        </div>
+        <p className="sr-auth-aside-foot">
+          PRIVATE BY DESIGN · YOUR STORY IS YOURS
+        </p>
+      </aside>
       <div className="sr-auth-panel">
         <div className="flex items-center justify-between">
           {showBack ? (
@@ -24,7 +46,17 @@ export function AuthShell({ title, subtitle, children, onBack, showBack = true }
               type="button"
               aria-label="Back"
               onClick={onBack ?? (() => router.back())}
-              style={{ color: "var(--c-ink-soft)", background: "var(--c-cream-deep)", borderRadius: 8, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+              style={{
+                color: "var(--c-ink-soft)",
+                background: "var(--c-cream-deep)",
+                borderRadius: 8,
+                width: 44,
+                height: 44,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
             >
               <ChevronLeftIcon size={22} />
             </button>
@@ -32,18 +64,40 @@ export function AuthShell({ title, subtitle, children, onBack, showBack = true }
             <div />
           )}
           <div
-            style={{ fontFamily: "var(--font-display)", letterSpacing: "0.2em", fontSize: 12, fontWeight: 800, color: "var(--c-gold-deep)" }}
+            style={{
+              fontFamily: "var(--font-display)",
+              letterSpacing: "0.2em",
+              fontSize: 12,
+              fontWeight: 800,
+              color: "var(--c-gold-deep)",
+            }}
           >
             SHE.
           </div>
         </div>
         <h1
-          style={{ marginTop: 20, fontSize: 36, lineHeight: 0.95, fontWeight: 800, fontFamily: "var(--font-display)", color: "var(--c-ink)", letterSpacing: "-0.03em" }}
+          style={{
+            marginTop: 20,
+            fontSize: 36,
+            lineHeight: 0.95,
+            fontWeight: 800,
+            fontFamily: "var(--font-display)",
+            color: "var(--c-ink)",
+            letterSpacing: "-0.03em",
+          }}
         >
           {title}
         </h1>
         {subtitle && (
-          <p style={{ marginTop: 8, maxWidth: 300, fontSize: 14, lineHeight: 1.5, color: "var(--c-ink-soft)" }}>
+          <p
+            style={{
+              marginTop: 8,
+              maxWidth: 300,
+              fontSize: 14,
+              lineHeight: 1.5,
+              color: "var(--c-ink-soft)",
+            }}
+          >
             {subtitle}
           </p>
         )}

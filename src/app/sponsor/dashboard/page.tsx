@@ -70,7 +70,7 @@ export default function SponsorDashboardPage() {
             />
           </div>
           <PortalCard>
-            <h2>The women you support</h2>
+            <h2 id="participants">The women you support</h2>
             {!data.participants.length && (
               <p>
                 No active sponsorships yet. An administrator can link

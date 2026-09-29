@@ -76,7 +76,7 @@ function NoteForm({
 }
 export default function TrainerDashboardPage() {
   const { user, loading } = useSessionUser({
-    loginPath: "/admin/login",
+    loginPath: "/trainer/login",
     expectedRole: "trainer",
   });
   const [data, setData] = useState<Data | null>(null);
@@ -116,7 +116,7 @@ export default function TrainerDashboardPage() {
             <PortalStat label="Notes recorded" value={data.notes} />
           </div>
           <PortalCard>
-            <h2>Your participants</h2>
+            <h2 id="participants">Your participants</h2>
             {!data.participants.length && (
               <p>
                 No participants assigned yet. An administrator can add

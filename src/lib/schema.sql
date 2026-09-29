@@ -136,6 +136,33 @@ CREATE TABLE IF NOT EXISTS lessons (
   steps_json            TEXT NOT NULL DEFAULT '[]'  -- JSON array of step reflections
 );
 
+-- Private trainer preparation library. Access uses custom server sessions,
+-- never a public Storage URL or an anonymous Data API policy.
+CREATE TABLE IF NOT EXISTS course_materials (
+  id TEXT PRIMARY KEY,
+  trainer_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  pathway_id TEXT NOT NULL REFERENCES pathways(id) ON DELETE CASCADE,
+  title TEXT NOT NULL CHECK (char_length(title) BETWEEN 1 AND 150),
+  filename TEXT NOT NULL,
+  storage_path TEXT NOT NULL UNIQUE,
+  mime_type TEXT NOT NULL,
+  size_bytes BIGINT NOT NULL CHECK (size_bytes > 0 AND size_bytes <= 52428800),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','ready')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS course_materials_trainer ON course_materials(trainer_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS course_materials_pathway ON course_materials(pathway_id);
+ALTER TABLE course_materials ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON course_materials FROM PUBLIC;
+DO $$ BEGIN
+  IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'anon') THEN
+    REVOKE ALL ON course_materials FROM anon;
+  END IF;
+  IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'authenticated') THEN
+    REVOKE ALL ON course_materials FROM authenticated;
+  END IF;
+END $$;
+
 CREATE TABLE IF NOT EXISTS lesson_progress (
   user_id               TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   lesson_id             TEXT NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,

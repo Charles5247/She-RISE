@@ -16,7 +16,7 @@ export function proxy(req: NextRequest) {
   const isSponsorPath = pathname.startsWith("/sponsor");
   const isStaffPath = isAdminPath || isTrainerPath || isSponsorPath;
   const isApiAdminPath = pathname.startsWith("/api/admin");
-  const isApiStaffPath = isApiAdminPath || pathname.startsWith("/api/trainer/dashboard") || pathname.startsWith("/api/sponsor/dashboard");
+  const isApiStaffPath = isApiAdminPath || (pathname.startsWith("/api/trainer/") && !pathname.startsWith("/api/trainer/chat/")) || pathname.startsWith("/api/sponsor/dashboard");
   const isChatPath = pathname.startsWith("/trainer-chat/");
   const isMarketingOrApp = !isChatPath && !isStaffPath && !pathname.startsWith("/api/") && !pathname.startsWith("/_next");
 

@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { postJson } from "@/lib/apiClient";
 
 // Screen 24 — Admin login. Split screen per design handoff: plum left half
@@ -166,6 +167,7 @@ export default function AdminLoginPage() {
               className="border rounded-lg px-4 py-3 text-sm"
               style={{ borderColor: "var(--c-line)" }}
               placeholder="Work email"
+              aria-label="Phone or email"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               autoComplete="username"
@@ -176,6 +178,7 @@ export default function AdminLoginPage() {
               className="border rounded-lg px-4 py-3 text-sm"
               style={{ borderColor: "var(--c-line)" }}
               placeholder="Password"
+              aria-label="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
@@ -210,6 +213,7 @@ export default function AdminLoginPage() {
               Downloads require documented purpose.
             </div>
           </div>
+          <p className="mt-5 text-sm">New trainer? <Link className="sr-portal-link" href="/trainer/signup">Create a trainer account</Link></p>
         </form>
       </div>
     </main>

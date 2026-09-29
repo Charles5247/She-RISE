@@ -136,6 +136,15 @@ CREATE TABLE IF NOT EXISTS lessons (
   steps_json            TEXT NOT NULL DEFAULT '[]'  -- JSON array of step reflections
 );
 
+-- Keep existing languages and add Nigerian Pidgin without rewriting user rows.
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = 'users'::regclass
+    AND conname = 'users_language_check' AND pg_get_constraintdef(oid) LIKE '%pcm%') THEN
+    ALTER TABLE users DROP CONSTRAINT IF EXISTS users_language_check;
+    ALTER TABLE users ADD CONSTRAINT users_language_check CHECK (language IN ('en','ha','yo','ig','pcm'));
+  END IF;
+END $$;
+
 -- Private trainer preparation library. Access uses custom server sessions,
 -- never a public Storage URL or an anonymous Data API policy.
 CREATE TABLE IF NOT EXISTS course_materials (

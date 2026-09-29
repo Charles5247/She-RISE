@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 // Screen 21 — Settings. Grouped rows, toggles for wifi-only, panic hide
 // (Design Principle 08 — always available, default ON), log-out CTA.
 //
@@ -176,9 +177,7 @@ function ConsentModal({
             fontWeight: 800,
             fontSize: 11,
           }}
-        >
-          Cancel
-        </button>
+        ><T text={"Cancel"} />{" "}</button>
         <button
           onClick={onAllow}
           disabled={busy}
@@ -412,7 +411,7 @@ export default function SettingsPage() {
         <button onClick={() => router.back()} aria-label="Back" style={{ color: "var(--c-ink)", width: 44, height: 44 }}>
           <ChevronLeftIcon size={22} />
         </button>
-        <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 16 }}>Settings</div>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 16 }}><T text={"Settings"} /></div>
       </header>
 
       <GroupLabel>Data &amp; downloads</GroupLabel>
@@ -423,7 +422,7 @@ export default function SettingsPage() {
         onChange={(v) => update({ wifiOnlyDownloads: v })}
       />
 
-      <GroupLabel>Safety</GroupLabel>
+      <GroupLabel><T text={"Safety"} /></GroupLabel>
       <div style={{ background: "#fff", borderBottom: "1px solid var(--c-line-soft)", padding: "14px 16px", display: "flex", alignItems: "center", gap: 10 }}>
         <LockIcon size={16} style={{ color: "var(--c-gold-deep)" }} />
         <div style={{ fontSize: 11, color: "var(--c-ink-soft)" }}>Long-press the home indicator anytime to hide SheRISE behind a calculator screen.</div>
@@ -442,7 +441,7 @@ export default function SettingsPage() {
         <ConnectRow provider="linkedin" onConnect={() => setConsentFor("linkedin")} />
       )}
 
-      <GroupLabel>About</GroupLabel>
+      <GroupLabel><T text={"About"} /></GroupLabel>
       <div
         onClick={() => router.push("/help-safety")}
         style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", background: "#fff", borderBottom: "1px solid var(--c-line-soft)", cursor: "pointer" }}

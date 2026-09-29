@@ -3,6 +3,7 @@
 // component, adapted to a real controlled `<input>`/`<textarea>` (the
 // reference version was a static display-only mock).
 import { useId } from "react";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 export interface FormFieldProps {
   label?: string;
@@ -44,6 +45,7 @@ export function FormField({
   disabled,
 }: FormFieldProps) {
   const id = useId();
+  const { tr } = useLanguage();
   const border = error ? "var(--c-danger)" : "var(--c-line)";
 
   return (
@@ -54,7 +56,7 @@ export function FormField({
           className="sr-label"
           style={{ display: "block", fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 6 }}
         >
-          {label}
+          {tr(label)}
         </label>
       )}
       <div
@@ -73,7 +75,7 @@ export function FormField({
             id={id}
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
+            placeholder={placeholder ? tr(placeholder) : undefined}
             required={required}
             rows={rows}
             maxLength={maxLength}
@@ -96,7 +98,7 @@ export function FormField({
             type={type}
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
+            placeholder={placeholder ? tr(placeholder) : undefined}
             autoComplete={autoComplete}
             required={required}
             maxLength={maxLength}
@@ -118,10 +120,10 @@ export function FormField({
         {suffix && <span style={{ marginLeft: 8, color: "var(--c-ink-soft)", fontSize: 12 }}>{suffix}</span>}
       </div>
       {hint && !error && (
-        <div style={{ marginTop: 4, fontSize: 11, color: "var(--c-ink-soft)" }}>{hint}</div>
+        <div style={{ marginTop: 4, fontSize: 11, color: "var(--c-ink-soft)" }}>{tr(hint)}</div>
       )}
       {error && (
-        <div style={{ marginTop: 4, fontSize: 11, color: "var(--c-danger)" }}>{error}</div>
+        <div style={{ marginTop: 4, fontSize: 11, color: "var(--c-danger)" }}>{tr(error)}</div>
       )}
     </div>
   );

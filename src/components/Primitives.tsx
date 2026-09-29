@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 // Smaller shared primitives: ListRow, Chip, Toast, Divider, EmptyState,
 // SectionHeader — matching the design reference 1:1, adapted to real click
 // handlers where relevant.
@@ -45,9 +46,9 @@ export function ListRow({
             textOverflow: "ellipsis",
           }}
         >
-          {title}
+          {typeof title === "string" ? <T text={title} /> : title}
         </div>
-        {subtitle && <div style={{ fontSize: 12, color: "var(--c-ink-soft)", marginTop: 2 }}>{subtitle}</div>}
+        {subtitle && <div style={{ fontSize: 12, color: "var(--c-ink-soft)", marginTop: 2 }}>{typeof subtitle === "string" ? <T text={subtitle} /> : subtitle}</div>}
       </div>
       {right}
     </div>
@@ -87,7 +88,7 @@ export function Chip({
         whiteSpace: "nowrap",
       }}
     >
-      {icon} {label}
+      {icon} {typeof label === "string" ? <T text={label} /> : label}
     </button>
   );
 }
@@ -109,7 +110,7 @@ export function Toast({ message, kind = "info" }: { message: React.ReactNode; ki
         boxShadow: "var(--shadow-modal)",
       }}
     >
-      {message}
+      {typeof message === "string" ? <T text={message} /> : message}
     </div>
   );
 }
@@ -163,9 +164,9 @@ export function EmptyState({
             letterSpacing: "-0.02em",
           }}
         >
-          {title}
+          {typeof title === "string" ? <T text={title} /> : title}
         </div>
-        {body && <div style={{ marginTop: 6, fontSize: 13, color: "var(--c-ink-soft)", lineHeight: 1.5, maxWidth: 280 }}>{body}</div>}
+        {body && <div style={{ marginTop: 6, fontSize: 13, color: "var(--c-ink-soft)", lineHeight: 1.5, maxWidth: 280 }}>{typeof body === "string" ? <T text={body} /> : body}</div>}
       </div>
       {action}
     </div>
@@ -196,9 +197,9 @@ export function SectionHeader({
             letterSpacing: "-0.02em",
           }}
         >
-          {title}
+          {typeof title === "string" ? <T text={title} /> : title}
         </div>
-        {subtitle && <div style={{ marginTop: 4, fontSize: 12, color: "var(--c-ink-soft)" }}>{subtitle}</div>}
+        {subtitle && <div style={{ marginTop: 4, fontSize: 12, color: "var(--c-ink-soft)" }}>{typeof subtitle === "string" ? <T text={subtitle} /> : subtitle}</div>}
       </div>
       {right && <div>{right}</div>}
     </div>

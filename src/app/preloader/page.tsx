@@ -43,8 +43,7 @@ export default function PreloaderPage() {
           router.replace(res.data.user.onboarding_complete ? "/dashboard" : "/onboarding/profile");
           return;
         }
-        const seenWelcome = sessionStorage.getItem("sherise_seen_welcome");
-        router.replace(seenWelcome ? "/signup" : "/welcome");
+        router.replace("/login");
       };
       // Small delay so the brand frame is actually visible rather than
       // flashing past instantly on a warm cache / fast API response.

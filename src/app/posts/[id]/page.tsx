@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 // Screen 11 — Post detail. Hero photo, action bar, comment list with
 // trainer badge on trainer comments (Design Principle 05).
 import { use, useCallback, useEffect, useState } from "react";
@@ -98,7 +99,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
         <button onClick={() => router.back()} aria-label="Back" style={{ color: "var(--c-ink)", width: 44, height: 44 }}>
           <ChevronLeftIcon size={22} />
         </button>
-        <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 16 }}>Post</div>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 16 }}><T text={"Post"} /></div>
       </header>
 
       <div

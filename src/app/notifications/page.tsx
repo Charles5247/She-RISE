@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 // Screen 12 — Notifications. Grouped by day ("Today" / "Earlier this week"),
 // avatar with kind-badge. Tapping a notification marks it read and (if it
 // references a post) navigates to that post.
@@ -80,7 +81,7 @@ export default function NotificationsPage() {
         <button onClick={() => router.back()} aria-label="Back" style={{ color: "var(--c-ink)", width: 44, height: 44 }}>
           <ChevronLeftIcon size={22} />
         </button>
-        <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 16 }}>Notifications</div>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 16 }}><T text={"Notifications"} /></div>
         {!isEmpty && (
           <button
             onClick={async () => {
@@ -88,9 +89,7 @@ export default function NotificationsPage() {
             }}
             className="sr-label"
             style={{ marginLeft: "auto", fontSize: 10, color: "var(--c-magenta)", background: "none", border: "none", cursor: "pointer" }}
-          >
-            Mark all read
-          </button>
+          ><T text={"Mark all read"} />{" "}</button>
         )}
       </header>
       {error && <p role="alert" className="sr-portal-error">{error}</p>}
@@ -101,9 +100,7 @@ export default function NotificationsPage() {
         <>
           {data.today.length > 0 && (
             <>
-              <div className="sr-label" style={{ padding: "14px 16px 6px", fontSize: 10, color: "var(--c-ink-soft)" }}>
-                Today
-              </div>
+              <div className="sr-label" style={{ padding: "14px 16px 6px", fontSize: 10, color: "var(--c-ink-soft)" }}><T text={"Today"} />{" "}</div>
               {data.today.map((n) => (
                 <NotificationRow key={n.id} n={n} onClick={() => open(n)} />
               ))}
@@ -111,9 +108,7 @@ export default function NotificationsPage() {
           )}
           {data.earlier.length > 0 && (
             <>
-              <div className="sr-label" style={{ padding: "14px 16px 6px", fontSize: 10, color: "var(--c-ink-soft)" }}>
-                Earlier
-              </div>
+              <div className="sr-label" style={{ padding: "14px 16px 6px", fontSize: 10, color: "var(--c-ink-soft)" }}><T text={"Earlier"} />{" "}</div>
               {data.earlier.map((n) => (
                 <NotificationRow key={n.id} n={n} onClick={() => open(n)} />
               ))}

@@ -2,23 +2,25 @@
 // TabBar — bottom nav for the participant app: home/learn/plus(FAB)/progress/me.
 // Real navigation via next/link, active state derived from usePathname().
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { HomeIcon, BookIcon, PlusIcon, ChartIcon, UserIcon } from "./Icon";
+import { usePathname } from "next/navigation";
+import { HomeIcon, BookIcon, ChartIcon, UserIcon } from "./Icon";
+import { T } from "@/i18n/LanguageProvider";
 
 const TABS = [
   { id: "home", href: "/dashboard", icon: HomeIcon, label: "Home" },
   { id: "learn", href: "/pathways", icon: BookIcon, label: "Learn" },
-  { id: "plus", href: "/composer", icon: PlusIcon, label: "" },
+  { id: "community", href: "/feed", icon: UserIcon, label: "Community" },
   { id: "progress", href: "/progress", icon: ChartIcon, label: "Progress" },
   { id: "me", href: "/profile", icon: UserIcon, label: "Me" },
 ] as const;
 
 export function TabBar() {
   const pathname = usePathname();
-  const router = useRouter();
 
   return (
     <nav
+      className="sr-participant-nav"
+      aria-label="Main navigation"
       style={{
         position: "fixed",
         left: 0,
@@ -33,7 +35,7 @@ export function TabBar() {
         justifyContent: "space-around",
         backdropFilter: "blur(20px)",
         zIndex: 40,
-        maxWidth: 480,
+        maxWidth: 720,
         margin: "0 auto",
       }}
     >
@@ -69,6 +71,7 @@ export function TabBar() {
           <Link
             key={t.id}
             href={t.href}
+            aria-current={isActive ? "page" : undefined}
             style={{
               display: "flex",
               flexDirection: "column",
@@ -81,7 +84,7 @@ export function TabBar() {
             }}
           >
             <Icon size={22} filled={isActive} />
-            <div style={{ fontSize: 10, fontWeight: isActive ? 700 : 500 }}>{t.label}</div>
+            <div style={{ fontSize: 10, fontWeight: isActive ? 700 : 500 }}><T text={t.label} /></div>
           </Link>
         );
       })}

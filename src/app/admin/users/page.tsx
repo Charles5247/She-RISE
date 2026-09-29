@@ -5,8 +5,9 @@ import { AdminShell } from "@/components/AdminShell";
 import { LoadingState, ErrorState } from "@/components/States";
 import { useSessionUser } from "@/lib/useSessionUser";
 import { deleteJson, getJson, patchJson, postJson } from "@/lib/apiClient";
+import { ParticipantImport } from "@/components/ParticipantImport";
 
-interface ManagedUser { id: string; role: string; first_name: string; last_name: string | null; email: string | null; phone: string | null }
+interface ManagedUser { id: string; role: string; first_name: string; last_name: string | null; email: string | null; phone: string | null; language: string }
 const fieldStyle = { width: "100%", padding: "10px 12px", border: "1px solid var(--c-line)", borderRadius: 6, background: "#fff", color: "var(--c-ink)" };
 
 export default function AdminUsersPage() {
@@ -35,7 +36,7 @@ export default function AdminUsersPage() {
     const form = new FormData(formElement);
     const result = await postJson("/api/admin/users", {
       firstName: form.get("firstName"), lastName: form.get("lastName"), email: form.get("email"), phone: form.get("phone"),
-      role: form.get("role"), specialty: form.get("specialty"), password: form.get("password"),
+      role: form.get("role"), specialty: form.get("specialty"), password: form.get("password"), language: form.get("language"),
     });
     if (!result.ok) { setError(result.message); return; }
     formElement.reset(); setNotice("Account created. Share the sign-in details securely."); await load();
@@ -46,7 +47,7 @@ export default function AdminUsersPage() {
     setError(""); setNotice("");
     const form = new FormData(event.currentTarget);
     const result = await patchJson(`/api/admin/users?id=${encodeURIComponent(id)}`, {
-      firstName: form.get("firstName"), lastName: form.get("lastName"), email: form.get("email"), phone: form.get("phone"), password: form.get("password"),
+      firstName: form.get("firstName"), lastName: form.get("lastName"), email: form.get("email"), phone: form.get("phone"), password: form.get("password"), language: form.get("language"),
     });
     if (!result.ok) { setError(result.message); return; }
     setNotice("Account updated."); await load();
@@ -62,12 +63,15 @@ export default function AdminUsersPage() {
   if (userLoading) return <LoadingState label="Loading…" />;
   return (
     <AdminShell activeNav="users" title="User accounts" subtitle="CREATE, EDIT AND REMOVE ACCOUNTS" userName={user?.first_name ?? "Admin"}>
+      <ParticipantImport onImported={load} />
       <div style={{ display: "grid", gridTemplateColumns: "minmax(260px, 340px) 1fr", gap: 20, alignItems: "start" }}>
         <form onSubmit={createAccount} style={{ background: "#fff", border: "1px solid var(--c-line)", borderRadius: 10, padding: 18, display: "grid", gap: 10 }}>
           <h2 style={{ fontWeight: 800, fontSize: 18, marginBottom: 4 }}>Create account</h2>
           <input name="firstName" placeholder="First name" required style={fieldStyle} />
           <input name="lastName" placeholder="Last name" style={fieldStyle} />
-          <select name="role" style={fieldStyle} defaultValue="trainer"><option value="participant">Participant</option><option value="trainer">Trainer</option><option value="sponsor">Sponsor</option><option value="admin">Administrator</option></select>
+          <select name="role" aria-label="Account role" style={fieldStyle} defaultValue="participant"><option value="participant">Participant</option><option value="trainer">Trainer</option><option value="sponsor">Sponsor</option><option value="admin">Administrator</option></select>
+          <label>Preferred language<select name="language" defaultValue="ha" style={fieldStyle}><option value="ha">Hausa</option><option value="yo">Yorùbá</option><option value="pcm">Nigerian Pidgin</option><option value="en">English</option><option value="ig">Igbo</option></select></label>
+          <p style={{ fontSize: 13 }}>Participants can sign in immediately with the password you set. No OTP or self-registration needed.</p>
           <input name="email" type="email" placeholder="Email address" style={fieldStyle} />
           <input name="phone" placeholder="Phone number" style={fieldStyle} />
           <input name="specialty" placeholder="Trainer specialty (if applicable)" style={fieldStyle} />
@@ -92,6 +96,7 @@ export default function AdminUsersPage() {
                 <input name="lastName" aria-label="Last name" defaultValue={account.last_name ?? ""} style={fieldStyle} />
                 <input name="email" aria-label="Email" type="email" defaultValue={account.email ?? ""} style={fieldStyle} />
                 <input name="phone" aria-label="Phone" defaultValue={account.phone ?? ""} style={fieldStyle} />
+                <select name="language" aria-label="Preferred language" defaultValue={account.language} style={fieldStyle}><option value="ha">Hausa</option><option value="yo">Yorùbá</option><option value="pcm">Nigerian Pidgin</option><option value="en">English</option><option value="ig">Igbo</option></select>
                 <input name="password" aria-label="New password (optional)" type="password" placeholder="New password (optional)" minLength={8} style={fieldStyle} />
                 <div style={{ display: "flex", gap: 8 }}><button type="submit" style={{ ...fieldStyle, background: "var(--c-plum)", color: "white", fontWeight: 700, cursor: "pointer" }}>Save</button><button type="button" onClick={() => removeAccount(account)} style={{ ...fieldStyle, width: "auto", color: "var(--c-danger)", cursor: "pointer" }}>Remove</button></div>
               </form>

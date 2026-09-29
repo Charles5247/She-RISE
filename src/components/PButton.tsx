@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 // PButton — primary/ghost/secondary button matching the design reference's
 // `PButton`, adapted to a real <button> element (clickable + disableable).
 export interface PButtonProps {
@@ -58,7 +59,7 @@ export function PButton({
         cursor: disabled ? "not-allowed" : "pointer",
       }}
     >
-      {label}
+      {typeof label === "string" ? <T text={label} /> : label}
       {icon}
     </button>
   );

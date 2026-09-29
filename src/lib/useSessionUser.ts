@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getJson } from "./apiClient";
+import { setLocalLanguage } from "@/i18n/LanguageProvider";
 
 export interface SessionUserView {
   id: string;
@@ -42,6 +43,7 @@ export function useSessionUser(opts: { loginPath?: string; expectedRole?: Sessio
         return;
       }
       setUser(res.data.user);
+      setLocalLanguage(res.data.user.language);
       setLoading(false);
     });
     return () => {

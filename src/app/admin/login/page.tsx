@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+
 import { postJson } from "@/lib/apiClient";
 
 // Screen 24 — Admin login. Split screen per design handoff: plum left half
@@ -213,7 +213,7 @@ export default function AdminLoginPage() {
               Downloads require documented purpose.
             </div>
           </div>
-          <p className="mt-5 text-sm">New trainer? <Link className="sr-portal-link" href="/trainer/signup">Create a trainer account</Link></p>
+          <p className="mt-5 text-sm">Accounts are provided by your programme administrator. Contact them if you need access or a password reset.</p>
         </form>
       </div>
     </main>

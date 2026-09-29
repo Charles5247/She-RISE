@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 // Screen 09 — Community feed. Milestone-first feed with story bar, hero
 // milestone cards, compact posts, and the bottom TabBar. Empty state
 // (#/empty-feed) shows for a newcomer with zero circles/posts yet.
@@ -73,7 +74,7 @@ export default function FeedPage() {
   const isEmpty = posts.length === 0 && joinedCircles.length === 0;
 
   return (
-    <main style={{ minHeight: "100vh", background: "var(--c-cream)", paddingBottom: 100 }}>
+    <main className="sr-community-page" style={{ minHeight: "100vh", background: "var(--c-cream)", paddingBottom: 100 }}>
       <OfflineBanner />
       <header
         style={{
@@ -88,10 +89,11 @@ export default function FeedPage() {
           justifyContent: "space-between",
         }}
       >
-        <div className="sr-label" style={{ fontSize: 13, fontWeight: 800, color: "var(--c-plum)" }}>
-          SHE.
+        <div className="sr-label" style={{ fontSize: 16, fontWeight: 800, color: "var(--c-ink)" }}>
+          <T text="Community" />
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <Link href="/composer" className="sr-community-post"><PlusIcon size={18} /><T text="Share" /></Link>
           <NotificationBell />
           <Link href="/profile" aria-label="My profile">
             <Avatar name={user?.first_name || "Me"} size={30} palette="warm" imageUrl={user?.avatar_url ?? null} />
@@ -127,16 +129,12 @@ export default function FeedPage() {
                 href="/circles"
                 className="text-xs font-bold uppercase px-4 py-2 rounded-lg"
                 style={{ background: "var(--c-cream)", color: "var(--c-ink)", fontFamily: "var(--font-display)" }}
-              >
-                Browse circles
-              </Link>
+              ><T text={"Browse circles"} />{" "}</Link>
               <Link
                 href="/composer"
                 className="text-xs font-bold uppercase px-4 py-2 rounded-lg text-white"
                 style={{ background: "var(--c-magenta)", fontFamily: "var(--font-display)" }}
-              >
-                Share a win
-              </Link>
+              ><T text={"Share a win"} />{" "}</Link>
             </div>
           }
         />

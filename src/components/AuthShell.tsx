@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 // AuthShell — participant auth-page shell (screens 01-08, "C2AuthShell" in
 // the design reference): back-chevron + "SHE." wordmark header, title/
 // subtitle, then children. Shared by participant sign-in and onboarding.
@@ -86,7 +87,7 @@ export function AuthShell({
             letterSpacing: "-0.03em",
           }}
         >
-          {title}
+          {typeof title === "string" ? <T text={title} /> : title}
         </h1>
         {subtitle && (
           <p
@@ -98,7 +99,7 @@ export function AuthShell({
               color: "var(--c-ink-soft)",
             }}
           >
-            {subtitle}
+            {typeof subtitle === "string" ? <T text={subtitle} /> : subtitle}
           </p>
         )}
         <div style={{ marginTop: 20 }}>{children}</div>

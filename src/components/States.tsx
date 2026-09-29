@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 // Shared loading/error/offline states used across participant screens
 // (design-handoff "States" section: #/no-wifi, #/error). Not standalone
 // routes — composed into any screen that fetches data.
@@ -11,7 +12,7 @@ export function LoadingState({ label = "Loading…" }: { label?: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: "64px 24px", color: "var(--c-ink-soft)" }}>
       <Spinner size={28} />
-      <div style={{ fontSize: 13 }}>{label}</div>
+      <div style={{ fontSize: 13 }}>{typeof label === "string" ? <T text={label} /> : label}</div>
     </div>
   );
 }
@@ -52,7 +53,7 @@ export function ErrorState({
         <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 800, color: "var(--c-ink)" }}>
           Couldn&apos;t load this
         </div>
-        <div style={{ marginTop: 4, fontSize: 13, color: "var(--c-ink-soft)", maxWidth: 280 }}>{message}</div>
+        <div style={{ marginTop: 4, fontSize: 13, color: "var(--c-ink-soft)", maxWidth: 280 }}>{typeof message === "string" ? <T text={message} /> : message}</div>
         <div style={{ marginTop: 4, fontSize: 11, color: "var(--c-ink-soft)" }}>Your unsent posts and drafts stay safe on this device.</div>
       </div>
       {onRetry && (

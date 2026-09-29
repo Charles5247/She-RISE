@@ -2,10 +2,12 @@ import en from "./en.json";
 import ha from "./ha.json";
 import yo from "./yo.json";
 import ig from "./ig.json";
+import pcm from "./pcm.json";
 
-export type Locale = "en" | "ha" | "yo" | "ig";
+export type Locale = "en" | "ha" | "yo" | "ig" | "pcm";
 
 const dictionaries: Record<Locale, Record<string, string>> = {
+  pcm: pcm as Record<string, string>,
   en: en as Record<string, string>,
   ha: ha as Record<string, string>,
   yo: yo as Record<string, string>,
@@ -13,6 +15,7 @@ const dictionaries: Record<Locale, Record<string, string>> = {
 };
 
 export const LOCALE_LABELS: Record<Locale, string> = {
+  pcm: "Pidgin English",
   en: "English",
   yo: "Yorùbá",
   ha: "Hausa",

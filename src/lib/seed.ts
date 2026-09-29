@@ -29,6 +29,7 @@ function rand(min: number, max: number) {
 }
 
 export async function seedIfEmpty() {
+  if (process.env.NODE_ENV === "production") return { seeded: false };
   const db = getDb();
   const count = ((await db.prepare("SELECT COUNT(*) as c FROM users").get()) as { c: number }).c;
   if (count > 0) {

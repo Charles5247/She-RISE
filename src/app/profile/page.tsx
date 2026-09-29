@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 // Screen 19 — My profile. Plum hero card with avatar+gold ring, medals/
 // streak/earned triad, FB (on) + LinkedIn (off) rows, links to edit/settings.
 import { useCallback, useEffect, useState } from "react";
@@ -84,9 +85,7 @@ export default function ProfilePage() {
           href="/profile/edit"
           className="sr-label"
           style={{ display: "inline-block", marginTop: 16, fontSize: 10, fontWeight: 800, color: "var(--c-gold)" }}
-        >
-          Edit profile
-        </Link>
+        ><T text={"Edit profile"} />{" "}</Link>
       </div>
 
       <div style={{ padding: "0 16px", display: "flex", flexDirection: "column", gap: 10 }}>
@@ -138,7 +137,7 @@ export default function ProfilePage() {
             marginTop: 6,
           }}
         >
-          <div style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>Settings</div>
+          <div style={{ flex: 1, fontSize: 13, fontWeight: 600 }}><T text={"Settings"} /></div>
           <ChevronRightIcon size={16} style={{ color: "var(--c-ink-soft)" }} />
         </Link>
         <Link

@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 // Screen 17 — Progress tracker. Ring (gold on plum) + streak/earned/medals
 // triad, medals grid (4-col, earned = filled), income sparkline, milestone list.
 import { useCallback, useEffect, useState } from "react";
@@ -56,7 +57,7 @@ export default function ProgressPage() {
   return (
     <main style={{ minHeight: "100vh", background: "var(--c-cream)", paddingBottom: 100 }}>
       <header style={{ padding: "20px 16px 8px" }}>
-        <div style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 800 }}>Progress</div>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 800 }}><T text={"Progress"} /></div>
       </header>
 
       <div
@@ -94,9 +95,7 @@ export default function ProgressPage() {
       </div>
 
       <div style={{ padding: "0 16px" }}>
-        <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 10 }}>
-          Medals
-        </div>
+        <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 10 }}><T text={"Medals"} />{" "}</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 24 }}>
           {data.medals.map((m) => (
             <div key={m.code} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, opacity: m.earned ? 1 : 0.35 }}>
@@ -120,16 +119,14 @@ export default function ProgressPage() {
 
         {data.incomeLog.length > 0 && (
           <>
-            <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 10 }}>
-              Income trend
-            </div>
+            <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 10 }}><T text={"Income trend"} />{" "}</div>
             <div style={{ background: "#fff", border: "1px solid var(--c-line)", borderRadius: "var(--r-lg)", padding: 16, marginBottom: 24, display: "flex", alignItems: "center", gap: 16 }}>
               <Spark data={data.incomeLog.map((i) => i.amount)} width={140} height={44} />
               <div>
                 <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 800 }}>
                   ₦{data.incomeLog[data.incomeLog.length - 1]?.amount.toLocaleString()}
                 </div>
-                <div style={{ fontSize: 11, color: "var(--c-ink-soft)" }}>Most recent income</div>
+                <div style={{ fontSize: 11, color: "var(--c-ink-soft)" }}><T text={"Most recent income"} /></div>
               </div>
             </div>
           </>
@@ -137,9 +134,7 @@ export default function ProgressPage() {
 
         {data.milestones.length > 0 && (
           <>
-            <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 10 }}>
-              Milestones
-            </div>
+            <div className="sr-label" style={{ fontSize: 10, color: "var(--c-ink-soft)", marginBottom: 10 }}><T text={"Milestones"} />{" "}</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {data.milestones.map((m) => (
                 <button

@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 // Screen 13 — Circles directory. Filter chips (by LGA, client-side), tabular
 // list with join/joined pill.
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -73,7 +74,7 @@ export default function CirclesPage() {
         <button onClick={() => router.back()} aria-label="Back" style={{ color: "var(--c-ink)", width: 44, height: 44 }}>
           <ChevronLeftIcon size={22} />
         </button>
-        <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 16 }}>Circles</div>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 16 }}><T text={"Circles"} /></div>
       </header>
 
       {lgas.length > 0 && (

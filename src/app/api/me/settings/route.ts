@@ -1,5 +1,6 @@
 import { getDb } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
+import { ACCOUNT_LANGUAGES } from "@/lib/managed-accounts";
 
 // GET/PATCH /api/me/settings — screen 21: account, wifi-only downloads,
 // panic-hide toggle (on by default per spec), language, crosspost connections.
@@ -36,6 +37,7 @@ export async function PATCH(req: Request) {
     liConnected?: boolean;
     pin?: string;
   };
+  if (language !== undefined && !ACCOUNT_LANGUAGES.includes(language)) return Response.json({ message: "Unsupported language." }, { status: 400 });
   const db = getDb();
   await db.prepare(
     `UPDATE users SET

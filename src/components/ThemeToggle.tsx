@@ -1,6 +1,7 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageProvider";
 import { useEffect, useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "sherise-theme";
@@ -24,6 +25,7 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeToggle() {
+  const { tr } = useLanguage();
   const theme = useSyncExternalStore(subscribe, getTheme, () => "light" as Theme);
 
   useEffect(() => {
@@ -51,7 +53,7 @@ export function ThemeToggle() {
       ) : (
         <Moon size={17} strokeWidth={2} />
       )}
-      <span>{isDark ? "Light" : "Dark"}</span>
+      <span>{tr(isDark ? "Light" : "Dark")}</span>
     </button>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { bricolage, inter, plexMono } from "@/lib/fonts";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { AppPreferences } from "@/components/AppPreferences";
+import { LanguageProvider } from "@/i18n/LanguageProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -27,8 +28,10 @@ export default function RootLayout({
       className={`${bricolage.variable} ${inter.variable} ${plexMono.variable} h-full`}
     >
       <body className="min-h-full">
-        {children}
-        <ThemeToggle />
+        <LanguageProvider>
+          <AppPreferences />
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );

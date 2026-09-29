@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 
 // Screen 20 - Edit profile. Avatar, state/LGA, and profile fields.
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -92,7 +93,7 @@ export default function EditProfilePage() {
         <button onClick={() => router.back()} aria-label="Back" style={{ color: "var(--c-ink)", width: 44, height: 44 }}>
           <ChevronLeftIcon size={22} />
         </button>
-        <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 16 }}>Edit profile</div>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 16 }}><T text={"Edit profile"} /></div>
       </header>
 
       <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>

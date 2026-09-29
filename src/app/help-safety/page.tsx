@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 // Screen 23 — Help & safety. Magenta emergency card w/ call button,
 // gold-outlined panic hide row (Design Principle 08).
 import { useCallback, useEffect, useState } from "react";
@@ -97,9 +98,7 @@ export default function HelpSafetyPage() {
               Long-press the home indicator anytime to instantly hide SheRISE
               behind a neutral calculator screen. No branding, no trace in
               your app switcher. Manage this in{" "}
-              <button onClick={() => router.push("/settings")} style={{ color: "var(--c-magenta)", fontWeight: 700, textDecoration: "underline" }}>
-                Settings
-              </button>
+              <button onClick={() => router.push("/settings")} style={{ color: "var(--c-magenta)", fontWeight: 700, textDecoration: "underline" }}><T text={"Settings"} />{" "}</button>
               .
             </div>
           </div>

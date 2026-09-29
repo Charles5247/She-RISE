@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -30,16 +31,16 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthShell title="Welcome back" subtitle="Log in to your movement." onBack={() => router.push("/welcome")}>
+    <AuthShell title="Welcome back" subtitle="Use the phone number or email and password your administrator gave you." onBack={() => router.push("/welcome")}>
       <form onSubmit={submit} className="sr-auth-form" aria-busy={loading}>
         <FormField label="Phone or email" value={identifier} onChange={setIdentifier} placeholder="Phone or email" autoComplete="username" required />
         <FormField label="Password" type="password" value={password} onChange={setPassword} placeholder="Your password" autoComplete="current-password" required />
-        <Link href="/forgot-password" className="sr-auth-link" style={{ alignSelf: "flex-end" }}>Forgot password?</Link>
+        <Link href="/forgot-password" className="sr-auth-link" style={{ alignSelf: "flex-end" }}><T text={"Forgot password?"} /></Link>
         {error && <p role="alert" style={{ fontSize: 14, color: "var(--c-danger)" }}>{error}</p>}
         <PButton type="submit" size="lg" disabled={loading} label={loading ? "Logging in..." : "Log in"} />
-        <p style={{ textAlign: "center", fontSize: 14 }}>New here? <Link href="/signup" className="sr-auth-link">Create account</Link></p>
+        <p style={{ textAlign: "center", fontSize: 14 }}><T text={"Need an account? Ask your programme administrator."} /></p>
       </form>
-      <p className="sr-staff-signin"><Link href="/admin/login">Staff sign in</Link></p>
+      <p className="sr-staff-signin"><Link href="/admin/login"><T text={"Staff sign in"} /></Link></p>
     </AuthShell>
   );
 }

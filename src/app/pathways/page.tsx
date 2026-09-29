@@ -1,4 +1,5 @@
 "use client";
+import { T } from "@/i18n/LanguageProvider";
 // Screen 14 — Skill pathway home. Plum hero card for the user's current
 // pathway + module list (done / current / locked states), plus other
 // pathways below.
@@ -113,7 +114,7 @@ export default function PathwaysPage() {
   return (
     <main style={{ minHeight: "100vh", background: "var(--c-cream)", paddingBottom: 100 }}>
       <header style={{ padding: "20px 16px 8px" }}>
-        <div style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 800 }}>Learn</div>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 800 }}><T text={"Learn"} /></div>
       </header>
       <div style={{ padding: "8px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
         {current.map((p) => (

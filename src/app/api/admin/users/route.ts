@@ -1,12 +1,13 @@
-import { getDb, newId } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { getSessionUser, hashPassword } from "@/lib/auth";
 import { withErrorHandling } from "@/lib/apiError";
+import { validateAccount, accountExists, insertAccount, ACCOUNT_LANGUAGES } from "@/lib/managed-accounts";
 
 export const GET = withErrorHandling(async () => {
   const actor = await getSessionUser();
   if (!actor) return Response.json({ message: "Sign in required." }, { status: 401 });
   if (actor.role !== "admin") return Response.json({ message: "Admin access required." }, { status: 403 });
-  const users = await getDb().prepare(`SELECT id, role, first_name, last_name, email, phone, created_at FROM users ORDER BY created_at DESC`).all();
+  const users = await getDb().prepare(`SELECT id, role, first_name, last_name, email, phone, language, created_at FROM users ORDER BY created_at DESC`).all();
   return Response.json({ users });
 });
 
@@ -15,38 +16,19 @@ export const POST = withErrorHandling(async (req: Request) => {
   if (!actor) return Response.json({ message: "Sign in required." }, { status: 401 });
   if (actor.role !== "admin") return Response.json({ message: "Admin access required." }, { status: 403 });
   const body = await req.json().catch(() => null) as Record<string, unknown> | null;
-  const firstName = typeof body?.firstName === "string" ? body.firstName.trim() : "";
-  const lastName = typeof body?.lastName === "string" ? body.lastName.trim() : "";
-  const role = body?.role;
-  const email = typeof body?.email === "string" && body.email.trim() ? body.email.trim().toLowerCase() : null;
-  const phone = typeof body?.phone === "string" && body.phone.trim() ? body.phone.trim() : null;
-  const password = typeof body?.password === "string" ? body.password : "";
-  const specialty = typeof body?.specialty === "string" ? body.specialty.trim() : "";
-  if (!firstName || !["participant", "trainer", "sponsor", "admin"].includes(String(role)) || (!email && !phone) || password.length < 8) {
-    return Response.json({ message: "Enter a name, role, email or phone, and a password of at least 8 characters." }, { status: 400 });
-  }
-
-  const db = getDb();
-  const id = newId("usr");
+  let account;
+  try { account = validateAccount(body || {}); }
+  catch (error) { return Response.json({ message: (error as Error).message }, { status: 400 }); }
   try {
-    await db.transaction(async (tx) => {
-      await tx.prepare(`INSERT INTO users (id, role, first_name, last_name, email, phone, password_hash, is_verified_trainer, onboarding_complete, panic_hide_enabled, wifi_only_downloads)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 0, 0)`)
-        .run(id, role, firstName, lastName || null, email, phone, hashPassword(password), role === "trainer" ? 1 : 0);
-      if (role === "trainer") {
-        await tx.prepare(`INSERT INTO trainer_profiles (user_id, specialty) VALUES (?, ?)`)
-          .run(id, specialty || "General training");
-      }
-      if (role === "sponsor") {
-        await tx.prepare(`INSERT INTO sponsor_profiles (user_id, women_sponsored_count, sponsor_since_year) VALUES (?, 0, ?)`)
-          .run(id, new Date().getFullYear());
-      }
+    return await getDb().transaction(async tx => {
+      if (await accountExists(tx, account)) return Response.json({ message: "Email or phone already registered." }, { status: 409 });
+      const id = await insertAccount(tx, account);
+      return Response.json({ ok: true, id }, { status: 201 });
     })();
   } catch (error) {
-    if ((error as { code?: string }).code === "23505") return Response.json({ message: "That email address or phone number is already in use." }, { status: 409 });
+    if ((error as { code?: string }).code === "23505") return Response.json({ message: "Email or phone already registered." }, { status: 409 });
     throw error;
   }
-  return Response.json({ ok: true, id }, { status: 201 });
 });
 
 export const PATCH = withErrorHandling(async (req: Request) => {
@@ -61,9 +43,10 @@ export const PATCH = withErrorHandling(async (req: Request) => {
   if (Object.hasOwn(body, "firstName") && (typeof body.firstName !== "string" || !body.firstName.trim())) {
     return Response.json({ message: "First name cannot be empty." }, { status: 400 });
   }
+  if (body.language !== undefined && !ACCOUNT_LANGUAGES.includes(String(body.language))) return Response.json({ message: "Invalid language." }, { status: 400 });
   const updates: string[] = [];
   const values: unknown[] = [];
-  const fieldMap = { firstName: "first_name", lastName: "last_name", email: "email", phone: "phone" } as const;
+  const fieldMap = { firstName: "first_name", lastName: "last_name", email: "email", phone: "phone", language: "language" } as const;
   for (const [key, column] of Object.entries(fieldMap)) {
     if (!Object.hasOwn(body, key)) continue;
     const value = body[key];

@@ -47,7 +47,6 @@ export function TabBar() {
             key={t.id}
             href={t.href}
             aria-current={isActive ? "page" : undefined}
-            aria-current={isActive ? "page" : undefined}
             style={{
               display: "flex",
               flexDirection: "column",
